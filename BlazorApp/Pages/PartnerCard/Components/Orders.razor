@@ -1,0 +1,75 @@
+﻿@attribute [Authorize]
+
+@using BlazorApp.Models
+
+<MudCard Elevation="3" Class="pa-4 mud-card-hover">
+    <MudCardHeader>
+        <MudText Typo="Typo.h6" Color="Color.Primary">매출 내역</MudText>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (Data == null)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="my-4" />
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">매출정보 검색 중...</MudText>
+        }
+        else if (!Data.Any())
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-4">
+                매출 내역이 없습니다.
+            </MudAlert>
+        }
+        else
+        {
+            <MudTable Items="@Data" Height="400px" FixedHeader="true" HorizontalScrollbar="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>구분</MudTh>
+                    <MudTh>1월</MudTh>
+                    <MudTh>2월</MudTh>
+                    <MudTh>3월</MudTh>
+                    <MudTh>4월</MudTh>
+                    <MudTh>5월</MudTh>
+                    <MudTh>6월</MudTh>
+                    <MudTh>7월</MudTh>
+                    <MudTh>8월</MudTh>
+                    <MudTh>9월</MudTh>
+                    <MudTh>10월</MudTh>
+                    <MudTh>11월</MudTh>
+                    <MudTh>12월</MudTh>
+                    <MudTh>합계</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="구분">@context.NM_GUBUN</MudTd>
+                    <MudTd DataLabel="1월">@context.AM_MON01.ToString("N0")</MudTd>
+                    <MudTd DataLabel="2월">@context.AM_MON02.ToString("N0")</MudTd>
+                    <MudTd DataLabel="3월">@context.AM_MON03.ToString("N0")</MudTd>
+                    <MudTd DataLabel="4월">@context.AM_MON04.ToString("N0")</MudTd>
+                    <MudTd DataLabel="5월">@context.AM_MON05.ToString("N0")</MudTd>
+                    <MudTd DataLabel="6월">@context.AM_MON06.ToString("N0")</MudTd>
+                    <MudTd DataLabel="7월">@context.AM_MON07.ToString("N0")</MudTd>
+                    <MudTd DataLabel="8월">@context.AM_MON08.ToString("N0")</MudTd>
+                    <MudTd DataLabel="9월">@context.AM_MON09.ToString("N0")</MudTd>
+                    <MudTd DataLabel="10월">@context.AM_MON10.ToString("N0")</MudTd>
+                    <MudTd DataLabel="11월">@context.AM_MON11.ToString("N0")</MudTd>
+                    <MudTd DataLabel="12월">@context.AM_MON12.ToString("N0")</MudTd>
+                    <MudTd DataLabel="합계">@context.AM_TOTAL.ToString("N0")</MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager HorizontalAlignment="HorizontalAlignment.Left" />
+                </PagerContent>
+            </MudTable>
+        }
+    </MudCardContent>
+</MudCard>
+
+<style>
+    .mud-card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        transition: all 0.3s ease-in-out;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public List<OrderDto> Data { get; set; } = new List<OrderDto>();
+}

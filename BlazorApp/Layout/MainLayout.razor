@@ -1,0 +1,206 @@
+﻿@using BlazorApp.Services.Auth
+@inherits LayoutComponentBase
+
+@* Required MudBlazor providers *@
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1" Dense="true">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" 
+                       Color="Color.Inherit" 
+                       Edge="Edge.Start" 
+                       OnClick="DrawerToggle" 
+                       aria-label="메뉴 열기" />
+
+        <MudImage Src="https://cdn.imweb.me/upload/S2021111596383b8bde81d/df6fcdd656437.png"
+                  Alt="Company Logo"
+                  Width="50"
+                  ObjectFit="ObjectFit.Contain"
+                  Class="mr-3" />
+        
+        <MudSpacer />
+        
+        <AuthorizeView>
+            <Authorized>
+                <div class="d-flex align-center gap-3">
+                    <!-- 커스텀 스타일 사용자 정보 -->
+                    <div class="user-info-container">
+                        <MudIcon Icon="@Icons.Material.Filled.Person"
+                                 Size="Size.Small"
+                                 Class="user-icon" />
+                        <MudText Typo="Typo.body2" Class="user-text">
+                            @GetUserDisplayName(context.User)
+                        </MudText>
+                    </div>
+
+                    <!-- 로그아웃 버튼 -->
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Inherit"
+                               StartIcon="@Icons.Material.Filled.Logout"
+                               OnClick="LogoutAsync"
+                               Disabled="@_isLoggingOut"
+                               Size="Size.Small"
+                               Class="logout-text-btn">
+                        @if (_isLoggingOut)
+                        {
+                            <span>로그아웃 중...</span>
+                        }
+                        else
+                        {
+                            <span>로그아웃</span>
+                        }
+                    </MudButton>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Success" 
+                           StartIcon="@Icons.Material.Filled.Login"
+                           Href="/login"
+                           Size="Size.Small">
+                    로그인
+                </MudButton>
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="_drawerOpen" 
+               Elevation="2"
+               Variant="DrawerVariant.Temporary"
+               Anchor="Anchor.Left"
+               OnClose="OnDrawerClose"
+               ClipMode="DrawerClipMode.Never"
+               Width="280px">
+        <div class="drawer-header">
+            <div class="d-flex align-center pa-4">
+                <MudImage Src="https://cdn.imweb.me/upload/S2021111596383b8bde81d/df6fcdd656437.png"
+                          Alt="Company Logo"
+                          Width="100"
+                          ObjectFit="ObjectFit.Contain"
+                          Class="mr-3" />
+
+                <MudText Typo="Typo.h6" Color="Color.Primary">동해렌즈</MudText>
+            </div>
+            <MudDivider />
+        </div>
+        <div class="drawer-content">
+            <NavMenu />
+        </div>
+    </MudDrawer>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4 mb-4">
+            <ErrorBoundary>
+                <ChildContent>
+                    @Body
+                </ChildContent>
+                <ErrorContent Context="exception">
+                    <MudAlert Severity="Severity.Error" Class="mb-4">
+                        <MudText Typo="Typo.h6">오류가 발생했습니다</MudText>
+                        <MudText Typo="Typo.body2">@exception.Message</MudText>
+                        <MudButton Class="mt-2" 
+                                   Variant="Variant.Outlined" 
+                                   OnClick="ReloadPage">
+                            페이지 새로고침
+                        </MudButton>
+                    </MudAlert>
+                </ErrorContent>
+            </ErrorBoundary>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject INotificationService NotificationService
+@inject ILogger<MainLayout> Logger
+
+@code {
+    private bool _drawerOpen = false;
+    private bool _isLoggingOut = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Logger.LogInformation("MainLayout 초기화 시작");
+            Logger.LogInformation("MainLayout 초기화 완료");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "MainLayout 초기화 중 오류 발생");
+        }
+    }
+
+    private void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private void OnDrawerClose()
+    {
+        _drawerOpen = false;
+    }
+
+    private async Task LogoutAsync()
+    {
+        if (_isLoggingOut) return;
+
+        try
+        {
+            _isLoggingOut = true;
+            StateHasChanged();
+
+            Logger.LogInformation("로그아웃 시작");
+
+            // CustomAuthStateProvider를 통한 로그아웃
+            if (AuthStateProvider is CustomAuthStateProvider customProvider)
+            {
+                await customProvider.LogoutAsync();
+                NotificationService.ShowSuccess("로그아웃되었습니다.");
+                Navigation.NavigateTo("/login", forceLoad: true);
+            }
+            else
+            {
+                Logger.LogWarning("CustomAuthStateProvider를 찾을 수 없습니다.");
+                NotificationService.ShowError("로그아웃 처리 중 오류가 발생했습니다.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "로그아웃 중 오류 발생");
+            NotificationService.ShowError("로그아웃 중 오류가 발생했습니다.");
+        }
+        finally
+        {
+            _isLoggingOut = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GetUserDisplayName(System.Security.Claims.ClaimsPrincipal user)
+    {
+        try
+        {
+            var userName = user.Identity?.Name;
+            if (!string.IsNullOrEmpty(userName))
+                return userName;
+
+            var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            return !string.IsNullOrEmpty(userId) ? userId : "사용자";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "사용자 표시명 가져오기 중 오류 발생");
+            return "사용자";
+        }
+    }
+
+    private void ReloadPage()
+    {
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    }
+}

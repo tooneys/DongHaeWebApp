@@ -1,0 +1,217 @@
+﻿@attribute [Authorize]
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject HttpClient Http
+
+@if (!string.IsNullOrEmpty(Data.Id)) {
+    <MudGrid>
+        <!-- 거래처 정보 섹션 -->
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="3" Class="pa-4 mud-card-hover">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6" Color="Color.Primary">거래처 정보</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack Spacing="3">
+                        <MudGrid>
+                            <MudItem xs="12" sm="6">
+                                <MudStack>
+                                    <MudField Label="안경원코드" Variant="Variant.Outlined">@Data.Optician.Id</MudField>
+                                    <MudField Label="안경원명" Variant="Variant.Outlined">@Data.Optician.Name</MudField>
+                                    <MudField Label="대표자명" Variant="Variant.Outlined">@Data.Optician.CeoName</MudField>
+                                    <MudField Label="개업일자" Variant="Variant.Outlined">@Data.Optician.OpenAt</MudField>
+                                    <MudField Label="등록일" Variant="Variant.Outlined">@Data.Optician.CreateAt</MudField>
+                                    <MudField Label="폐업일자" Variant="Variant.Outlined">@Data.Optician.CloseAt</MudField>
+                                </MudStack>
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudStack>
+                                    <MudField Label="등급" Variant="Variant.Outlined">@Data.Optician.Grade</MudField>
+                                    <MudField Label="담당자" Variant="Variant.Outlined">@Data.Optician.EmpName</MudField>
+                                    <MudField Label="사업자번호" Variant="Variant.Outlined">@Data.Optician.BizNo</MudField>
+                                    <MudField Label="전화번호" Variant="Variant.Outlined">@Data.Optician.Tel</MudField>
+                                    <MudField Label="휴대전화" Variant="Variant.Outlined">@Data.Optician.Phone</MudField>
+                                </MudStack>
+                            </MudItem>
+                        </MudGrid>
+                        <MudField Label="주소" Variant="Variant.Outlined">@Data.Optician.Address</MudField>
+                        <MudField Label="초도비고" Variant="Variant.Outlined">@Data.Optician.FirstNote</MudField>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- 파트너 카드 세부 정보 섹션 -->
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="3" Class="pa-4 mud-card-hover">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6" Color="Color.Primary">파트너 카드 세부 정보</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack Spacing="3">
+                        <MudGrid>
+                            <MudItem xs="12" sm="6">
+                                <MudStack>
+                                    <MudField Label="외형매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.SalesAmount</MudField>
+                                    <MudField Label="마인드" Variant="Variant.Outlined">@Data.PartnerCardDetail.Mind</MudField>
+                                    <MudField Label="결제" Variant="Variant.Outlined">@Data.PartnerCardDetail.Payment</MudField>
+                                    <MudField Label="EHC안경사" Variant="Variant.Outlined">@Data.PartnerCardDetail.EHCOpt</MudField>
+                                    <MudField Label="상권" Variant="Variant.Outlined">@Data.PartnerCardDetail.BusinessArea</MudField>
+                                    <MudField Label="상권내용" Variant="Variant.Outlined">@Data.PartnerCardDetail.BusinessAreaDetail</MudField>
+                                </MudStack>
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudStack>
+                                    <MudField Label="Tokai평균매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.TokaiAverageAmount</MudField>
+                                    <MudField Label="Tokai목표매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.TokaiGoalAmount</MudField>
+                                    <MudField Label="H사 매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.H_Amount</MudField>
+                                    <MudField Label="E사 매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.E_Amount</MudField>
+                                    <MudField Label="Z사 매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.Z_Amount</MudField>
+                                </MudStack>
+                            </MudItem>
+                        </MudGrid>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- 거래처 비고 테이블 -->
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="3" Class="pa-4 mud-card-hover">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6" Color="Color.Primary">거래처 비고</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTable Items="@Data.CustNotes" Hover="true" Height="300px" Dense="true" Striped="true" Breakpoint="Breakpoint.Sm">
+                        <HeaderContent>
+                            <MudTh>일자</MudTh>
+                            <MudTh>비고</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="일자">@context.RegDate</MudTd>
+                            <MudTd DataLabel="비고">@context.Remark</MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager />
+                        </PagerContent>
+                    </MudTable>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- 판촉물 테이블 -->
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="3" Class="pa-4 mud-card-hover">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6" Color="Color.Primary">판촉물</MudText>
+                    <MudSpacer />
+                    <MudButton
+                        Variant="Variant.Filled"
+                        StartIcon=@Icons.Material.Filled.Add
+                        Color="Color.Primary"
+                        OnClick="OpenAddDialog">
+                        추가
+                    </MudButton>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTable Items="@Data.Promotions" Hover="true" Height="300px" Dense="true" Striped="true" Breakpoint="Breakpoint.Sm">
+                        <HeaderContent>
+                            <MudTh>일자</MudTh>
+                            <MudTh>판촉물</MudTh>
+                            <MudTh>이미지</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="일자">@context.RegDate?.ToString("yyyy-MM-dd")</MudTd>
+                            <MudTd DataLabel="판촉물">@context.Promotion</MudTd>
+                            <MudTd>
+                                @if (!string.IsNullOrEmpty(context.ImageUrl))
+                                {
+                                    <MudImage Src="@GetFullImageUrl(context.ImageUrl)"
+                                              Alt="@context.Promotion"
+                                              Height="50"
+                                              Width="50"
+                                              ObjectFit="ObjectFit.Cover"
+                                              Style="border-radius: 4px;"
+                                              @onclick="() => ShowImageDialog(GetFullImageUrl(context.ImageUrl))" />
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Image" Size="Size.Large" />
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager />
+                        </PagerContent>
+                    </MudTable>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+}
+
+<style>
+    .mud-card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        transition: all 0.3s ease-in-out;
+    }
+</style>
+
+@code {
+    [Parameter] 
+    public PartnerCardDto Data { get; set; } = new();
+    
+    private async Task OpenAddDialog()
+    {
+        var options = new DialogOptions 
+        { 
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium 
+        };
+
+        var parameters = new DialogParameters
+        {
+            ["OpticianId"] = Data.Id
+        };
+
+        var dialog = DialogService.Show<AddPromotionDialog>("판촉물 추가", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: OpticianPromotion newItem })
+        {
+            // 새로운 리스트 참조 생성으로 Blazor가 변경을 감지하도록 함
+            var updatedPromotions = new List<OpticianPromotion>(Data.Promotions);
+            updatedPromotions.Add(newItem);
+            Data.Promotions = updatedPromotions;
+        }
+    }
+    
+    private string GetFullImageUrl(string imageUrl)
+    {
+        if (string.IsNullOrEmpty(imageUrl))
+            return string.Empty;
+            
+        // 이미 전체 URL인 경우
+        if (imageUrl.StartsWith("http"))
+            return imageUrl;
+            
+        // 상대 경로인 경우 기본 URL 추가
+        return $"{Http.BaseAddress?.ToString().TrimEnd('/')}{imageUrl}";
+    }
+
+    private async Task ShowImageDialog(string imageUrl)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("ImageUrl", imageUrl);
+
+        var options = new DialogOptions()
+            {
+                CloseButton = true,
+                MaxWidth = MaxWidth.Large,
+                FullWidth = true
+            };
+
+        await DialogService.ShowAsync<ImageDialog>("이미지 보기", parameters, options);
+    }
+}

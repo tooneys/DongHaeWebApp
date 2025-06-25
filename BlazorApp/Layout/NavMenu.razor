@@ -1,0 +1,47 @@
+﻿<div class="nav-menu">
+    <!-- 메뉴 섹션 헤더 -->
+    <div class="nav-section">
+        <MudText Typo="Typo.subtitle2" Class="nav-section-title pa-3">영업관리</MudText>
+        <MudDivider Class="nav-divider" />
+
+        <AuthorizeView>
+            <Authorized>
+                <!-- 대시보드 -->
+                <MudNavLink Href="/"
+                            Match="NavLinkMatch.All"
+                            Icon="@Icons.Material.Filled.Dashboard"
+                            Class="nav-item">
+                    대시보드
+                </MudNavLink>
+
+                <!-- 파트너카드 -->
+                <MudNavLink Href="/partnercard"
+                            Match="NavLinkMatch.Prefix"
+                            Icon="@Icons.Material.Filled.Badge"
+                            Class="nav-item">
+                    파트너카드
+                </MudNavLink>
+
+                <!-- 안경원 위치정보 -->
+                <MudNavLink Href="/optician-map"
+                            Match="NavLinkMatch.Prefix"
+                            Icon="@Icons.Material.Filled.LocationOn"
+                            Class="nav-item">
+                    안경원위치정보
+                </MudNavLink>
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-unauthorized">
+                    <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Medium" Color="Color.Secondary" />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">
+                        로그인이 필요합니다
+                    </MudText>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</div>
+
+@code {
+    // 필요시 추가 로직
+}

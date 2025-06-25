@@ -1,0 +1,40 @@
+﻿.map-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 0;
+}
+
+.map-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.simple-map-container {
+    width: 100vw;
+    height: calc(100vh - 100px);
+    margin-left: calc(-50vw + 50%);
+    position: relative;
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 50vh;
+    text-align: center;
+}
+
+.map-stats {
+    display: flex;
+    gap: 8px;
+    padding: 1rem;
+    background: white;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* 모든 복잡한 CSS 제거 */

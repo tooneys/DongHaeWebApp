@@ -1,0 +1,209 @@
+﻿@page "/Login"
+@attribute [AllowAnonymous]
+
+<MudContainer Class="mt-16">
+    <MudGrid Justify="Justify.Center">
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Elevation="5" Class="pa-6">
+                <MudCardContent>
+                    <!-- 로고 -->
+                    <MudImage Src="https://cdn.imweb.me/upload/S2021111596383b8bde81d/df6fcdd656437.png"
+                              Alt="Company Logo"
+                              Width="150"
+                              ObjectFit="ObjectFit.Contain"
+                              Class="mx-auto mb-4 d-block" />
+
+                    <!-- 제목 -->
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">동해렌즈(주)</MudText>
+
+                    <!-- 입력 폼 -->
+                    <MudForm @ref="form" @bind-IsValid="@isFormValid">
+                        <MudTextField Label="사원번호"
+                                      Variant="Variant.Outlined"
+                                      Class="mb-4"
+                                      @bind-Value="loginModel.UserId"
+                                      Required="true"
+                                      RequiredError="사원번호를 입력해주세요."
+                                      Disabled="@isLoading"
+                                      MaxLength="20"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Person" />
+
+                        <MudTextField Label="비밀번호"
+                                      Variant="Variant.Outlined"
+                                      InputType="InputType.Password"
+                                      Class="mb-4"
+                                      @bind-Value="loginModel.Password"
+                                      Required="true"
+                                      RequiredError="비밀번호를 입력해주세요."
+                                      OnKeyDown="PasswordKeyDown"
+                                      Disabled="@isLoading"
+                                      MaxLength="50"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Lock" />
+
+                        <!-- 오류 메시지 표시 -->
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <MudAlert Severity="Severity.Error" Class="mb-4" Variant="Variant.Outlined">
+                                @errorMessage
+                            </MudAlert>
+                        }
+
+                        <!-- 로그인 버튼 -->
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Large"
+                                   FullWidth="true"
+                                   Class="mb-4"
+                                   OnClick="LoginAsync"
+                                   Disabled="@(!isFormValid || isLoading)">
+                            @if (isLoading)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">로그인 중...</MudText>
+                            }
+                            else
+                            {
+                                <MudText>로그인</MudText>
+                            }
+                        </MudButton>
+                    </MudForm>
+
+                    <!-- 추가 링크 -->
+                    <div class="d-flex justify-center">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            문의사항이 있으시면 관리자에게 연락해주세요.
+                        </MudText>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject INotificationService NotificationService
+@inject ILogger<Login> Logger
+
+@code {
+    private MudForm form = null!;
+    private bool isFormValid = false;
+    private bool isLoading = false;
+    private string errorMessage = string.Empty;
+    private LoginModel loginModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Logger.LogInformation("로그인 페이지 초기화 시작");
+
+            // 🔥 AuthenticationStateProvider를 통한 인증 상태 확인
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+
+            if (isAuthenticated)
+            {
+                Logger.LogInformation("이미 인증된 사용자, 홈으로 리디렉션: User={User}",
+                    authState.User.Identity?.Name);
+                Navigation.NavigateTo("/", replace: true);
+                return;
+            }
+
+            Logger.LogInformation("로그인 페이지 초기화 완료");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "로그인 페이지 초기화 중 오류 발생");
+            NotificationService.ShowError("페이지 로드 중 오류가 발생했습니다.");
+        }
+    }
+
+    private async Task LoginAsync()
+    {
+        if (!isFormValid || isLoading)
+            return;
+
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
+
+            Logger.LogInformation("로그인 시도: UserId={UserId}", loginModel.UserId);
+
+            // 🔥 CustomAuthStateProvider를 사용한 로그인
+            if (AuthStateProvider is CustomAuthStateProvider customProvider)
+            {
+                var result = await customProvider.LoginAsync(loginModel.UserId, loginModel.Password);
+
+                if (result.Successed)
+                {
+                    Logger.LogInformation("로그인 성공: UserId={UserId}", loginModel.UserId);
+                    NotificationService.ShowSuccess("로그인되었습니다.");
+
+                    // 약간의 지연 후 리디렉션 (사용자 경험 개선)
+                    await Task.Delay(500);
+                    Navigation.NavigateTo("/", replace: true);
+                }
+                else
+                {
+                    var errors = string.Join(", ", result.Errors);
+                    errorMessage = errors;
+
+                    Logger.LogWarning("로그인 실패: UserId={UserId}, Errors={Errors}",
+                        loginModel.UserId, errors);
+
+                    NotificationService.ShowError(errors);
+                    loginModel.Password = string.Empty; // 비밀번호 필드 초기화
+                }
+            }
+            else
+            {
+                Logger.LogError("CustomAuthStateProvider를 찾을 수 없습니다.");
+                errorMessage = "인증 시스템 오류가 발생했습니다.";
+                NotificationService.ShowError(errorMessage);
+            }
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Logger.LogWarning(ex, "인증 오류: UserId={UserId}", loginModel.UserId);
+            errorMessage = "아이디 또는 비밀번호가 잘못되었습니다.";
+            NotificationService.ShowError(errorMessage);
+            loginModel.Password = string.Empty;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.LogError(ex, "로그인 중 네트워크 오류 발생: UserId={UserId}", loginModel.UserId);
+            errorMessage = "서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.";
+            NotificationService.ShowError(errorMessage);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "로그인 중 예상치 못한 오류 발생: UserId={UserId}", loginModel.UserId);
+            errorMessage = "로그인 처리 중 오류가 발생했습니다.";
+            NotificationService.ShowError(errorMessage);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task PasswordKeyDown(KeyboardEventArgs eventArgs)
+    {
+        if (eventArgs.Code == "Enter" && isFormValid && !isLoading)
+        {
+            await LoginAsync();
+        }
+    }
+
+    private class LoginModel
+    {
+        public string UserId { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+}

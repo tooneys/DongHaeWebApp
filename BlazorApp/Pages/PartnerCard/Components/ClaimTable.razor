@@ -1,0 +1,170 @@
+﻿@using BlazorApp.Models
+
+<div class="visit-history-table-container">
+    @if (IsLoading)
+    {
+        <div class="d-flex flex-column align-center justify-center pa-8">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-4">
+                @LoadingMessage
+            </MudText>
+        </div>
+    }
+    else if (!HasData || !Data.Any())
+    {
+        <MudAlert Severity="@GetEmptyStateSeverity()" Variant="Variant.Outlined" Class="mt-4">
+            <div class="d-flex align-center">
+                <MudIcon Icon="@GetEmptyStateIcon()" Class="mr-3" />
+                <MudText Typo="Typo.subtitle1">@GetEmptyStateTitle()</MudText>
+            </div>
+        </MudAlert>
+    }
+    else
+    {
+        <MudTable Items="@Data"
+                  Hover="true"
+                  Breakpoint="Breakpoint.Sm"
+                  Elevation="0"
+                  Dense="@Dense"
+                  Striped="false"
+                  Height="@Height"
+                  FixedHeader="true"
+                  SortLabel="정렬"
+                  AllowUnsorted="false"
+                  HorizontalScrollbar="true">
+            <HeaderContent>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<OpticianClaimDto, object>(x => DateTime.TryParse(x.DT_CLAIM, out var date) ? date : DateTime.MinValue)">
+                        접수일자
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<OpticianClaimDto, object>(x => x.NM_CLAIM ?? string.Empty)">
+                        클레임구분
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<OpticianClaimDto, object>(x => x.NM_RESULT ?? string.Empty)">
+                        처리결과
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<OpticianClaimDto, object>(x => x.NM_INQUIRY ?? string.Empty)">
+                        문의방법
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>클레임내용</MudTh>
+                <MudTh>처리내용</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="접수일자">
+                    @if (DateTime.TryParse(context.DT_CLAIM, out var visitDate))
+                    {
+                        <div>
+                            <MudText Typo="Typo.body2" Class="font-weight-medium">
+                                @visitDate.ToString("yyyy-MM-dd")
+                            </MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @GetRelativeDate(visitDate)
+                            </MudText>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2">@context.DT_CLAIM</MudText>
+                    }
+                </MudTd>
+                <MudTd DataLabel="클레임구분">
+                    <MudText Typo="Typo.body2" Style="max-width: 250px;">@context.NM_CLAIM</MudText>
+                </MudTd>
+                <MudTd DataLabel="처리결과">
+                    <MudText Typo="Typo.body2" Style="max-width: 250px;">@context.NM_RESULT</MudText>
+                </MudTd>
+                <MudTd DataLabel="문의방법">
+                    <MudText Typo="Typo.body2" Style="max-width: 250px;">@context.NM_INQUIRY</MudText>
+                </MudTd>
+                <MudTd DataLabel="클레임내용">
+                    @if (!string.IsNullOrWhiteSpace(context.TX_CLAIM))
+                    {
+                        <MudTooltip Text="@context.TX_CLAIM" Placement="Placement.Top">
+                            <MudText Typo="Typo.body2"
+                                     Style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help;">
+                                @context.TX_CLAIM
+                            </MudText>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">-</MudText>
+                    }
+                </MudTd>
+                <MudTd DataLabel="처리내용">
+                    @if (!string.IsNullOrWhiteSpace(context.TX_CONTENTS))
+                    {
+                        <MudTooltip Text="@context.TX_CONTENTS" Placement="Placement.Top">
+                            <MudText Typo="Typo.body2"
+                                     Style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help;">
+                                @context.TX_CONTENTS
+                            </MudText>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">-</MudText>
+                    }
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="@PageSizeOptions"
+                               HorizontalAlignment="HorizontalAlignment.Left"
+                               InfoFormat="@InfoFormat" />
+            </PagerContent>
+        </MudTable>
+    }
+</div>
+
+@code {
+    [Parameter] public IEnumerable<OpticianClaimDto> Data { get; set; } = Enumerable.Empty<OpticianClaimDto>();
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool HasData { get; set; }
+    [Parameter] public bool Dense { get; set; } = false;
+    [Parameter] public string Height { get; set; } = "400px";
+    [Parameter] public int[] PageSizeOptions { get; set; } = { 10, 25, 50, 100 };
+    [Parameter] public string InfoFormat { get; set; } = "{first_item}-{last_item} / {all_items}";
+    [Parameter] public string LoadingMessage { get; set; } = "방문이력을 불러오는 중...";
+
+    // 액션 이벤트 (한 번만 선언)
+    [Parameter] public EventCallback<OpticianClaimDto> OnViewClicked { get; set; }
+    [Parameter] public EventCallback<OpticianClaimDto> OnEditClicked { get; set; }
+    [Parameter] public EventCallback<OpticianClaimDto> OnDeleteClicked { get; set; }
+
+    private string GetRelativeDate(DateTime date)
+    {
+        var diff = DateTime.Today - date.Date;
+
+        return diff.Days switch
+        {
+            0 => "오늘",
+            1 => "어제",
+            < 7 => $"{diff.Days}일 전",
+            < 30 => $"{diff.Days / 7}주 전",
+            < 365 => $"{diff.Days / 30}개월 전",
+            _ => $"{diff.Days / 365}년 전"
+        };
+    }
+
+    private Severity GetEmptyStateSeverity()
+    {
+        return HasData ? Severity.Info : Severity.Warning;
+    }
+
+    private string GetEmptyStateIcon()
+    {
+        return HasData ? Icons.Material.Filled.FilterList : Icons.Material.Filled.EventBusy;
+    }
+
+    private string GetEmptyStateTitle()
+    {
+        return HasData ? "필터 조건에 맞는 데이터가 없습니다" : "클레임 이력이 없습니다";
+    }
+}

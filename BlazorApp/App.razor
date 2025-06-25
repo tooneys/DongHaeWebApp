@@ -1,0 +1,53 @@
+﻿@using BlazorApp.Pages.Auth
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <Authorizing>
+                    <!-- 최소한의 로딩 표시 -->
+                    <div class="minimal-loading">
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle"
+                                     Height="100vh"
+                                     Animation="Animation.Wave" />
+                    </div>
+                </Authorizing>
+                <NotAuthorized>
+                    <RedirectToLogin />
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <div class="d-flex justify-center align-center" style="height: 50vh;">
+                    <div class="text-center">
+                        <MudIcon Icon="@Icons.Material.Filled.SearchOff"
+                                 Size="Size.Large"
+                                 Color="Color.Secondary"
+                                 Class="mb-3" />
+                        <MudText Typo="Typo.h5" Class="mb-2">페이지를 찾을 수 없습니다</MudText>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Href="/"
+                                   Class="mt-3">
+                            홈으로 돌아가기
+                        </MudButton>
+                    </div>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
+
+<style>
+    .minimal-loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--mud-palette-background);
+    }
+</style>

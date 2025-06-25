@@ -1,0 +1,69 @@
+﻿@attribute [Authorize]
+
+@using BlazorApp.Models
+
+<MudCard Elevation="3" Class="pa-4 mud-card-hover">
+    <MudCardHeader>
+        <MudText Typo="Typo.h6" Color="Color.Primary">반품 내역</MudText>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (Data == null)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="my-4" />
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">반품정보 검색 중...</MudText>
+        }
+        else if (!Data.Any())
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-4">
+                반품된 내역이 없습니다.
+            </MudAlert>
+        }
+        else
+        {
+            <MudTable Items="@Data" Height="400px" FixedHeader="true" HorizontalScrollbar="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>오더번호</MudTh>
+                    <MudTh>반품번호</MudTh>
+                    <MudTh>순번</MudTh>
+                    <MudTh>안경원명</MudTh>
+                    <MudTh>상품명</MudTh>
+                    <MudTh>수량</MudTh>
+                    <MudTh>반품사유</MudTh>
+                    <MudTh>반품상세사유</MudTh>
+                    <MudTh>반품율</MudTh>
+                    <MudTh>반품금액</MudTh>
+                    <MudTh>담당자</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="오더번호">@context.NO_ORDER</MudTd>
+                    <MudTd DataLabel="반품번호">@context.NO_SMCR</MudTd>
+                    <MudTd DataLabel="순번">@context.NO_SEQ</MudTd>
+                    <MudTd DataLabel="안경원명">@context.NM_CUST</MudTd>
+                    <MudTd DataLabel="상품명">@context.NM_ITEM</MudTd>
+                    <MudTd DataLabel="수량">@context.QT_RETURN</MudTd>
+                    <MudTd DataLabel="반품사유">@context.CD_REASON</MudTd>
+                    <MudTd DataLabel="반품상세사유">@context.TX_REASONDESC</MudTd>
+                    <MudTd DataLabel="반품율">@context.RT_RETURN</MudTd>
+                    <MudTd DataLabel="반품금액">@context.AM_RETURN</MudTd>
+                    <MudTd DataLabel="담당자">@context.NM_EMP</MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager HorizontalAlignment="HorizontalAlignment.Left" />
+                </PagerContent>
+            </MudTable>
+        }
+    </MudCardContent>
+</MudCard>
+
+<style>
+    .mud-card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        transition: all 0.3s ease-in-out;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public List<ReturnOrderDto> Data { get; set; } = new List<ReturnOrderDto>();
+}

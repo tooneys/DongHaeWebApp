@@ -1,0 +1,37 @@
+﻿<MudCard>
+    <MudCardHeader>
+        <MudText Typo="Typo.h6">상위 10개 제품 매출 실적</MudText>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudChart ChartType="ChartType.Pie"
+                  InputData="@ProductSales"
+                  InputLabels="@ProductLabels"
+                  Width="250px"
+                  Height="250px" />
+        <MudTable Items="@Top10Products" Dense="true">
+            <HeaderContent>
+                <MudTh>순위</MudTh>
+                <MudTh>제품명</MudTh>
+                <MudTh>매출(만원)</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="순위">@context.Rank</MudTd>
+                <MudTd DataLabel="제품명">@context.ProductName</MudTd>
+                <MudTd DataLabel="매출">@context.Sales.ToString("N0")</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter] public double[] ProductSales { get; set; }
+    [Parameter] public string[] ProductLabels { get; set; }
+    [Parameter] public List<ProductInfo> Top10Products { get; set; }
+
+    public class ProductInfo
+    {
+        public int Rank { get; set; }
+        public string ProductName { get; set; }
+        public double Sales { get; set; }
+    }
+}

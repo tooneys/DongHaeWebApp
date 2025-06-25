@@ -1,0 +1,99 @@
+﻿@using BlazorApp.Services.OpticianMap
+@inject IDialogService DialogService
+@inject ILogger<UnregisteredOpticianDialog> Logger
+@inject IOpticianMapClientService OpticianMapClientService
+
+<MudDialog>
+    <DialogContent>
+        <div class="pa-4">
+            <MudText Typo="Typo.h5" Class="mb-4">
+                <MudIcon Icon="Icons.Material.Filled.AddBusiness" Class="mr-2" Color="Color.Warning" />
+                @Marker.BplcNm
+            </MudText>
+            
+            <MudDivider Class="mb-4" />
+            
+            <MudAlert Severity="Severity.Warning" Class="mb-4">
+                이 안경원은 아직 우리 서비스에 등록되지 않았습니다.
+            </MudAlert>
+
+            <UnRegVisitHistoryTable Data="@Data"
+                               IsLoading="@(Data == null)"
+                               HasData="@(Data?.Any() == true)" />
+        </div>
+    </DialogContent>
+    
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Disabled="@isProcessing">닫기</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   StartIcon="@(isProcessing ? Icons.Material.Filled.HourglassEmpty : Icons.Material.Filled.Add)"
+                   @onclick="OpenAddDialog"
+                   Disabled="@isDialogOpen">
+            @(isProcessing ? "처리 중..." : "새 방문이력 추가")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public OpticianMapDto Marker { get; set; }
+    
+    private List<UnRegMarkerHistory> Data { get; set; } = new();
+    private bool isProcessing = false;
+    private bool isDialogOpen = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Data = await OpticianMapClientService.GetVisitHistoryById(Marker);
+    }
+    
+    void Cancel() 
+    {
+        if (!isProcessing)
+        {
+            MudDialog.Cancel();
+        }
+    }
+    
+    private async Task OpenAddDialog()
+    {
+        if (isDialogOpen) return; // 중복 클릭 방지
+
+        isDialogOpen = true;
+        isProcessing = true;
+
+        try
+        {
+            var parameters = new DialogParameters
+            {
+                { "Marker", Marker}
+            };
+
+            var options = new DialogOptions() 
+            { 
+                MaxWidth = MaxWidth.Medium, 
+                FullWidth = true,
+                CloseButton = true,
+                BackdropClick = false
+            };
+
+            var dialog = await DialogService.ShowAsync<AddUnRegVisitHistoryDialog>("새 방문이력 추가", parameters, options);
+            var result = await dialog.Result;
+
+            if (!result.Canceled && result.Data is UnRegMarkerHistory newHistory)
+            {
+                Data.Add(newHistory);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error opening add dialog");
+        }
+        finally
+        {
+            isDialogOpen = false;
+            isProcessing = false;
+        }
+    }
+}

@@ -1,0 +1,113 @@
+﻿@using BlazorApp.Services.PartnerCard
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject IPartnerCardClientService PartnerCardService
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">판촉물 추가</MudText>
+    </TitleContent>
+    <DialogContent>
+        <EditForm Model="@model" OnValidSubmit="@Submit">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudDatePicker Label="등록일자"
+                                   @bind-Date="@model.RegDate"
+                                   Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" Class="mt-3">
+                    <MudTextField Label="판촉물명"
+                                  @bind-Value="@model.Promotion"
+                                  Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" Class="mt-3">
+                    <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles"
+                                   Accept="image/*">
+                        <ActivatorContent>
+                            <MudFab Color="Color.Secondary"
+                                    StartIcon="@Icons.Material.Filled.Image"
+                                    Label="사진 업로드" />
+                        </ActivatorContent>
+                    </MudFileUpload>
+                    @if (_selectedFile != null)
+                    {
+                        <MudText Typo="Typo.body2" Class="mt-2">
+                            선택된 파일: @_selectedFile.Name (@((_selectedFile.Size / 1024f / 1024f).ToString("0.00")) MB)
+                        </MudText>
+                    }
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">취소</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="@isSubmitting">
+            @if (isSubmitting)
+            {
+                <MudProgressCircular Size="Size.Small" />
+                <span class="ml-2">처리중...</span>
+            }
+            else
+            {
+                <span>추가</span>
+            }</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public string OpticianId { get; set; } = string.Empty;
+    private OpticianPromotion model = new() { RegDate = DateTime.Today };
+    private IBrowserFile? _selectedFile;
+    private bool isSubmitting = false;
+
+    private void Cancel() => MudDialog.Cancel();
+    
+    private void UploadFiles(IBrowserFile file)
+    {
+        _selectedFile = file;
+    }
+    
+    private async Task Submit()
+    {
+        if (_selectedFile == null)
+        {
+            Snackbar.Add("사진을 선택해주세요", Severity.Error);
+            return;
+        }
+        
+        isSubmitting = true;
+        StateHasChanged();
+        
+        try
+        {
+            var result = await PartnerCardService.AddPromotionAsync(
+                OpticianId,
+                model.RegDate?.ToString("yyyy-MM-dd"),
+                model.Promotion,
+                _selectedFile);
+
+            if (result != null)
+            {
+                Snackbar.Add("판촉물이 성공적으로 추가되었습니다", Severity.Success);
+                MudDialog.Close(result);
+            }
+            else
+            {
+                Snackbar.Add("판촉물 추가에 실패했습니다", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"오류: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+}

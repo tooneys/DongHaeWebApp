@@ -1,0 +1,124 @@
+﻿@page "/optician-map"
+
+@using BlazorApp.Pages.OpticianMap.Components
+@using BlazorApp.Services.OpticianMap
+@inject IJSRuntime JSRuntime
+@inject IOpticianMapClientService OpticianMapService
+@inject IDialogService DialogService
+@inject ICommonClientService CommonClientService
+
+@implements IAsyncDisposable
+
+<div id="map" class="simple-map-container" @ref="mapContainer"></div>
+
+@code {
+    private ElementReference mapContainer;
+    private DotNetObjectReference<OpticianMap>? _dotNetRef;
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                _dotNetRef = DotNetObjectReference.Create(this);
+                
+                // marker Data 가져오기
+                var markers = await OpticianMapService.GetOpticianMapAllAsync();
+                
+                // 지도 초기화
+                await JSRuntime.InvokeVoidAsync("naverMapUtils.initializeNaverMap", _dotNetRef, "map", markers);
+            }
+            catch (JSException ex)
+            {
+                Console.WriteLine($"지도 초기화 오류: {ex.Message}");
+            }
+        }
+    }
+
+
+    [JSInvokable]
+    public async Task OnMarkerClicked(string markerJson)
+    {
+        var marker = JsonConvert.DeserializeObject<OpticianMapDto>(markerJson)!;
+
+        if (marker.IsReg)
+        {
+            await HandleRegisteredMarker(marker);
+        }
+        else
+        {
+            await HandleUnregisteredMarker(marker);
+        }
+
+        // 마커 클릭 후 UI 업데이트
+        StateHasChanged();
+    }
+
+    private async Task HandleRegisteredMarker(OpticianMapDto marker)
+    {
+        try
+        {
+            // Optician 정보 조회
+            var optician = await CommonClientService.GetOpticianByIdAsync(marker.CustCode);
+
+            if (optician != null)
+            {
+                // 등록된 마커 처리 로직
+                var parameters = new DialogParameters
+                {
+                    ["Optician"] = optician
+                };
+
+                var options = new DialogOptions
+                {
+                    CloseOnEscapeKey = false,
+                    MaxWidth = MaxWidth.ExtraLarge,
+                    FullWidth = true
+                };
+
+                await DialogService.ShowAsync<PartnerCardDialog>(
+                    $"등록된 안경원 - {marker.BplcNm}",
+                    parameters,
+                    options
+                );
+
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"등록된 안경원 다이얼로그 호출 오류: {ex.Message}");
+        }
+    }
+
+    private async Task HandleUnregisteredMarker(OpticianMapDto marker)
+    {
+        // 미등록 마커 처리 로직
+        var parameters = new DialogParameters
+            {
+                ["Marker"] = marker
+            };
+
+        var options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MaxWidth.Medium,
+                FullWidth = true,
+                NoHeader = false,
+                Position = DialogPosition.Center,
+            };
+
+        await DialogService.ShowAsync<UnregisteredOpticianDialog>($"미등록된 안경원 - {marker.BplcNm}",
+        parameters,
+        options
+        );
+    }
+
+    public void Dispose() => _dotNetRef?.Dispose();
+    
+    public async ValueTask DisposeAsync()
+    {
+        _dotNetRef?.Dispose();
+        await JSRuntime.InvokeVoidAsync("naver.maps.Event.clearInstanceListeners", mapContainer);
+    }
+}

@@ -1,0 +1,180 @@
+﻿@using BlazorApp.Models
+
+<div class="visit-history-table-container">
+    @if (IsLoading)
+    {
+        <div class="d-flex flex-column align-center justify-center pa-8">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-4">
+                @LoadingMessage
+            </MudText>
+        </div>
+    }
+    else if (!HasData || !Data.Any())
+    {
+        <MudAlert Severity="@GetEmptyStateSeverity()" Variant="Variant.Outlined" Class="mt-4">
+            <div class="d-flex align-center">
+                <MudIcon Icon="@GetEmptyStateIcon()" Class="mr-3" />
+                <div>
+                    <MudText Typo="Typo.subtitle1">@GetEmptyStateTitle()</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@GetEmptyStateMessage()</MudText>
+                </div>
+            </div>
+        </MudAlert>
+    }
+    else
+    {
+        <MudTable Items="@Data"
+                  Hover="true"
+                  Breakpoint="Breakpoint.Sm"
+                  Elevation="0"
+                  Dense="@Dense"
+                  Striped="false"
+                  Height="@Height"
+                  FixedHeader="true"
+                  SortLabel="정렬"
+                  AllowUnsorted="false"
+                  HorizontalScrollbar="true">
+            <HeaderContent>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<OpticianHistoryDto, object>(x => DateTime.TryParse(x.DT_COMP, out var date) ? date : DateTime.MinValue)">
+                        방문일자
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<OpticianHistoryDto, object>(x => x.TX_REASON ?? string.Empty)">
+                        방문사유
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<OpticianHistoryDto, object>(x => x.TX_PURPOSE ?? string.Empty)">
+                        방문목적
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>비고</MudTh>
+                @if (ShowActions)
+                {
+                    <MudTh Style="width: 120px;">액션</MudTh>
+                }
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="방문일자">
+                    @if (DateTime.TryParse(context.DT_COMP, out var visitDate))
+                    {
+                        <div>
+                            <MudText Typo="Typo.body2" Class="font-weight-medium">
+                                @visitDate.ToString("yyyy-MM-dd")
+                            </MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @GetRelativeDate(visitDate)
+                            </MudText>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2">@context.DT_COMP</MudText>
+                    }
+                </MudTd>
+                <MudTd DataLabel="방문사유">
+                    <MudTooltip Text="@context.TX_REASON" Placement="Placement.Top">
+                        <MudText Typo="Typo.body2" Style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help;">@context.TX_REASON</MudText>
+                    </MudTooltip>
+                </MudTd>
+                <MudTd DataLabel="방문목적">
+                    <MudTooltip Text="@context.TX_PURPOSE" Placement="Placement.Top">
+                        <MudText Typo="Typo.body2" Style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help;">@context.TX_PURPOSE</MudText>
+                    </MudTooltip>
+                </MudTd>
+                <MudTd DataLabel="비고">
+                    @if (!string.IsNullOrWhiteSpace(context.TX_NOTE))
+                    {
+                        <MudTooltip Text="@context.TX_NOTE" Placement="Placement.Top">
+                            <MudText Typo="Typo.body2"
+                                     Style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help;">
+                                @context.TX_NOTE
+                            </MudText>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">-</MudText>
+                    }
+                </MudTd>
+                @if (ShowActions)
+                {
+                    <MudTd DataLabel="액션">
+                        <MudButtonGroup Color="Color.Primary" Variant="Variant.Text" Size="Size.Small">
+                            <MudIconButton Icon="Icons.Material.Filled.Visibility"
+                                           OnClick="() => OnViewClicked.InvokeAsync(context)"
+                                           Title="상세보기" />
+                            <MudIconButton Icon="Icons.Material.Filled.Edit"
+                                           OnClick="() => OnEditClicked.InvokeAsync(context)"
+                                           Title="수정" />
+                            <MudIconButton Icon="Icons.Material.Filled.Delete"
+                                           Color="Color.Error"
+                                           OnClick="() => OnDeleteClicked.InvokeAsync(context)"
+                                           Title="삭제" />
+                        </MudButtonGroup>
+                    </MudTd>
+                }
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="@PageSizeOptions"
+                               HorizontalAlignment="HorizontalAlignment.Left"
+                               InfoFormat="@InfoFormat" />
+            </PagerContent>
+        </MudTable>
+    }
+</div>
+
+@code {
+    [Parameter] public IEnumerable<OpticianHistoryDto> Data { get; set; } = Enumerable.Empty<OpticianHistoryDto>();
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool HasData { get; set; }
+    [Parameter] public bool Dense { get; set; } = false;
+    [Parameter] public string Height { get; set; } = "400px";
+    [Parameter] public bool ShowActions { get; set; } = false;
+    [Parameter] public int[] PageSizeOptions { get; set; } = { 10, 25, 50, 100 };
+    [Parameter] public string InfoFormat { get; set; } = "{first_item}-{last_item} / {all_items}";
+    [Parameter] public string LoadingMessage { get; set; } = "방문이력을 불러오는 중...";
+
+    // 액션 이벤트 (한 번만 선언)
+    [Parameter] public EventCallback<OpticianHistoryDto> OnViewClicked { get; set; }
+    [Parameter] public EventCallback<OpticianHistoryDto> OnEditClicked { get; set; }
+    [Parameter] public EventCallback<OpticianHistoryDto> OnDeleteClicked { get; set; }
+
+    private string GetRelativeDate(DateTime date)
+    {
+        var diff = DateTime.Today - date.Date;
+
+        return diff.Days switch
+        {
+            0 => "오늘",
+            1 => "어제",
+            < 7 => $"{diff.Days}일 전",
+            < 30 => $"{diff.Days / 7}주 전",
+            < 365 => $"{diff.Days / 30}개월 전",
+            _ => $"{diff.Days / 365}년 전"
+        };
+    }
+
+    private Severity GetEmptyStateSeverity()
+    {
+        return HasData ? Severity.Info : Severity.Warning;
+    }
+
+    private string GetEmptyStateIcon()
+    {
+        return HasData ? Icons.Material.Filled.FilterList : Icons.Material.Filled.EventBusy;
+    }
+
+    private string GetEmptyStateTitle()
+    {
+        return HasData ? "필터 조건에 맞는 데이터가 없습니다" : "방문이력이 없습니다";
+    }
+
+    private string GetEmptyStateMessage()
+    {
+        return HasData ? "다른 조건으로 검색해보세요." : "새로운 방문이력을 추가해보세요.";
+    }
+}

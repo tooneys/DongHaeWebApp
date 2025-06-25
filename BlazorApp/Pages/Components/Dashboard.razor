@@ -1,0 +1,108 @@
+﻿<MudGrid GutterSize="24px">
+    <MudItem xs="12" md="4">
+        <RegionSalesCard RegionSeries="@RegionSeries"
+                         RegionLabels="@RegionLabels"
+                         Top10Regions="@Top10Regions" />
+    </MudItem>
+    <MudItem xs="12" md="4">
+        <ProductSalesPieCard ProductSales="@ProductSales"
+                             ProductLabels="@ProductLabels"
+                             Top10Products="@Top10Products" />
+    </MudItem>
+    <MudItem xs="12" md="4">
+        <StoreSalesCard Top10Stores="@Top10Stores"
+                        MonthlyStoreSeries="@MonthlyStoreSeries"
+                        MonthLabels="@MonthLabels" />
+    </MudItem>
+</MudGrid>
+
+@code {
+    public List<ChartSeries> RegionSeries { get; set; } = new();
+    public string[] RegionLabels { get; set; } = Array.Empty<string>();
+    public List<RegionSalesCard.RegionInfo> Top10Regions { get; set; } = new();
+
+    public double[] ProductSales { get; set; }
+    public string[] ProductLabels { get; set; }
+    public List<ProductSalesPieCard.ProductInfo> Top10Products { get; set; } = new();
+
+    public List<ChartSeries> MonthlyStoreSeries { get; set; } = new();
+    public string[] MonthLabels { get; set; } =
+        new[] { "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월" };
+    public List<StoreSalesCard.StoreInfo> Top10Stores { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        GenerateSampleData();
+    }
+
+    private void GenerateSampleData()
+    {
+        var regions = new[] { "강남구", "서초구", "광명시", "구로구", "송파구", "영등포구", "동작구", "금천구", "관악구", "성동구" };
+        var storeNames = Enumerable.Range(1, 15).Select(i => $"안경원{i}").ToList();
+        var productNames = Enumerable.Range(1, 15).Select(i => $"제품{i}").ToList();
+
+        var rand = new Random();
+
+        // 1. 지역별 매출
+        var allRegions = regions.Select(r => new RegionSalesCard.RegionInfo
+        {
+            RegionName = r,
+            Sales = Math.Round(rand.Next(2000, 10000) + rand.NextDouble(), 1)
+        })
+        .OrderByDescending(r => r.Sales)
+        .Take(10)
+        .Select((r, idx) => { r.Rank = idx + 1; return r; })
+        .ToList();
+
+        Top10Regions = allRegions;
+        RegionLabels = allRegions.Select(r => r.RegionName).ToArray();
+        RegionSeries = new List<ChartSeries>
+        {
+            new ChartSeries
+            {
+                Name = "지역 매출(만원)",
+                Data = allRegions.Select(r => r.Sales).ToArray()
+            }
+        };
+
+        // 2. 제품별 매출
+        var products = productNames.Select((name, idx) =>
+                new ProductSalesPieCard.ProductInfo
+                {
+                    ProductName = name,
+                    Sales = rand.Next(1000, 5000)
+                })
+            .OrderByDescending(p => p.Sales)
+            .Take(10)
+            .Select((p, i) => { p.Rank = i + 1; return p; })
+            .ToList();
+
+        Top10Products = products;
+        ProductLabels = products.Select(p => p.ProductName).ToArray();
+        ProductSales = products.Select(p => p.Sales).ToArray();
+
+        // 3. 안경원별 월별 매출
+        var stores = storeNames.Select((name, idx) =>
+            {
+                var monthlySales = Enumerable.Range(0, 12).Select(_ => (double)rand.Next(100, 500)).ToArray();
+                return new StoreSalesCard.StoreInfo
+                {
+                    StoreName = name,
+                    Sales = monthlySales.Sum(),
+                    GrowthRate = Math.Round(rand.NextDouble() * 20 - 5, 1),
+                    MonthlySales = monthlySales
+                };
+            })
+            .OrderByDescending(s => s.Sales)
+            .Take(10)
+            .Select((s, i) => { s.Rank = i + 1; return s; })
+            .ToList();
+
+        Top10Stores = stores;
+        MonthlyStoreSeries = stores.Select(s => new ChartSeries
+        {
+            Name = s.StoreName,
+            Data = s.MonthlySales
+        }).ToList();
+    }
+}

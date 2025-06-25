@@ -1,0 +1,37 @@
+﻿<MudCard>
+    <MudCardHeader>
+        <MudText Typo="Typo.h6">관리 지역별 상위 10개 매출 실적</MudText>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudChart ChartType="ChartType.Bar"
+                  ChartSeries="@RegionSeries"
+                  XAxisLabels="@RegionLabels"
+                  Width="100%"
+                  Height="250px" />
+        <MudTable Items="@Top10Regions" Dense="true">
+            <HeaderContent>
+                <MudTh>순위</MudTh>
+                <MudTh>지역</MudTh>
+                <MudTh>매출(만원)</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="순위">@context.Rank</MudTd>
+                <MudTd DataLabel="지역">@context.RegionName</MudTd>
+                <MudTd DataLabel="매출">@context.Sales</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter] public List<ChartSeries> RegionSeries { get; set; }
+    [Parameter] public string[] RegionLabels { get; set; }
+    [Parameter] public List<RegionInfo> Top10Regions { get; set; }
+
+    public class RegionInfo
+    {
+        public int Rank { get; set; }
+        public string RegionName { get; set; }
+        public double Sales { get; set; }
+    }
+}

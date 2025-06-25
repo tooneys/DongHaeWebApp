@@ -1,0 +1,64 @@
+.nav-menu {
+    padding: var(--mud-default-spacing-3) 0;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.nav-section {
+    margin-bottom: var(--mud-default-spacing-4);
+}
+
+.nav-section-title {
+    padding: var(--mud-default-spacing-2) var(--mud-default-spacing-4);
+    color: var(--mud-palette-text-secondary) !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.75rem;
+}
+
+.nav-divider {
+    margin: var(--mud-default-spacing-2) var(--mud-default-spacing-4);
+    opacity: 0.3;
+}
+
+.nav-item {
+    margin: var(--mud-default-spacing-1) var(--mud-default-spacing-3);
+    border-radius: var(--mud-default-borderradius);
+    transition: all 0.2s ease;
+}
+
+    .nav-item:hover {
+        background-color: var(--mud-palette-action-hover) !important;
+    }
+
+    .nav-item.active {
+        background-color: var(--mud-palette-primary) !important;
+        color: var(--mud-palette-primary-text) !important;
+    }
+
+.nav-unauthorized {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--mud-default-spacing-4);
+    text-align: center;
+}
+
+/* 스크롤바 스타일 */
+.nav-menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.nav-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.nav-menu::-webkit-scrollbar-thumb {
+    background: var(--mud-palette-divider);
+    border-radius: 2px;
+}
+
+    .nav-menu::-webkit-scrollbar-thumb:hover {
+        background: var(--mud-palette-text-disabled);
+    }

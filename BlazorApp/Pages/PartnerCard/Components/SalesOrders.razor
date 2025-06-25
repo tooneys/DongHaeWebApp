@@ -1,0 +1,97 @@
+﻿@attribute [Authorize]
+
+@using BlazorApp.Models
+
+<MudCard Elevation="3" Class="pa-2 mud-card-hover">
+    <MudCardHeader>
+        <MudText Typo="Typo.h6" Color="Color.Primary">판매 내역</MudText>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (Data == null)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="my-4" />
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">판매정보 검색 중...</MudText>
+        }
+        else if (!Data.Any())
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-4">
+                판매된 내역이 없습니다.
+            </MudAlert>
+        }
+        else
+        {
+            <MudTable Items="@Data" Height="400px" FixedHeader="true" HorizontalScrollbar="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh Class="text-center">주문분류</MudTh>
+                    <MudTh Class="text-center">주문일자</MudTh>
+                    <MudTh Class="text-center">오더번호</MudTh>
+                    <MudTh Class="text-center">주문구분</MudTh>
+                    <MudTh Class="text-center">상품명</MudTh>
+                    <MudTh Class="text-center">수량</MudTh>
+                    <MudTh Class="text-center">코팅</MudTh>
+                    <MudTh Class="text-center">R/L</MudTh>
+                    <MudTh Class="text-center">SPH</MudTh>
+                    <MudTh Class="text-center">CYL</MudTh>
+                    <MudTh Class="text-center">Axis</MudTh>
+                    <MudTh Class="text-center">Add</MudTh>
+                    <MudTh Class="text-center">착색</MudTh>
+                    <MudTh Class="text-center">주문상태</MudTh>
+                    <MudTh Class="text-center">품목군</MudTh>
+                    <MudTh Class="text-center">기능</MudTh>
+                    <MudTh Class="text-center">굴절율</MudTh>
+                    <MudTh Class="text-center">상품그룹</MudTh>
+                    <MudTh Class="text-center">변색</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd Class="text-center" DataLabel="주문분류">@context.NM_ITEMDIV</MudTd>
+                    <MudTd Class="text-center" DataLabel="주문일자">@context.DT_COMP</MudTd>
+                    <MudTd Class="text-left" DataLabel="오더번호">@context.NO_ORDER</MudTd>
+                    <MudTd Class="text-left" DataLabel="주문구분">@context.NM_ORDER</MudTd>
+                    <MudTd Class="text-left" DataLabel="상품명">@context.NM_ITEM</MudTd>
+                    <MudTd Class="text-right" DataLabel="수량">@context.QT_ORDER.ToString("N0")</MudTd>
+                    <MudTd Class="text-left" DataLabel="코팅">@context.NM_COATING</MudTd>
+                    <MudTd Class="text-center" DataLabel="R/L">@context.NM_RL</MudTd>
+                    <MudTd Class="text-center" DataLabel="SPH">@context.AM_SPH</MudTd>
+                    <MudTd Class="text-center" DataLabel="CYL">@context.AM_CYL</MudTd>
+                    <MudTd Class="text-center" DataLabel="Axis">@context.AM_AXIS.ToString("N1")</MudTd>
+                    <MudTd Class="text-center" DataLabel="Add">@context.AM_ADD.ToString("N2")</MudTd>
+                    <MudTd Class="text-left" DataLabel="착색">@context.NM_COLORING</MudTd>
+                    <MudTd Class="text-left" DataLabel="주문상태">@context.CD_STATE</MudTd>
+                    <MudTd Class="text-left" DataLabel="품목군">@context.NM_ITEMGROUP</MudTd>
+                    <MudTd Class="text-left" DataLabel="기능">@context.NM_FUNC</MudTd>
+                    <MudTd Class="text-left" DataLabel="굴절율">@context.NM_REFRACTIVE</MudTd>
+                    <MudTd Class="text-left" DataLabel="상품그룹">@context.NM_DETAIL</MudTd>
+                    <MudTd Class="text-left" DataLabel="변색">@context.NM_DISCOLOR</MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager HorizontalAlignment="HorizontalAlignment.Left" />
+                </PagerContent>
+            </MudTable>
+        }
+    </MudCardContent>
+</MudCard>
+
+<style>
+    .text-left {
+        text-align: left;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .mud-card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        transition: all 0.3s ease-in-out;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public List<SalesOrderDto> Data { get; set; } = new();
+}

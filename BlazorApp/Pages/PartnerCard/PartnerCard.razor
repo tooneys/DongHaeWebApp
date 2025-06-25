@@ -1,0 +1,159 @@
+﻿@page "/partnercard"
+@page "/partnercard/{OpticianId}"
+@attribute [Authorize]
+
+@using BlazorApp.Pages.PartnerCard.Components
+@using BlazorApp.Services.PartnerCard
+
+<PageTitle>파트너카드</PageTitle>
+<MudStack StretchItems="StretchItems.End" Spacing="4" Class="my-6">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <OpticianAutocomplete Value="_optician" ValueChanged="HandleOpticianSelected"  />
+
+        @if (_optician != null && !string.IsNullOrEmpty(_optician.Id))
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+            Color="Color.Primary"
+            OnClick="RefreshData"
+            Disabled="_isLoading"/>
+        }
+    </MudStack>
+    <MudSpacer />
+
+    @if (_optician == null || string.IsNullOrEmpty(_optician.Id))
+    {
+        <MudCard Elevation="2" Class="pa-6 d-flex align-center justify-center mud-card-hover" Style="height: 400px;">
+            <MudStack AlignItems="AlignItems.Center">
+                <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Large" />
+                <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">안경원을 선택해 주세요!</MudText>
+            </MudStack>
+        </MudCard>
+    }
+    else if (_isLoading || partnerCard == null)
+    {
+        <MudCard Elevation="2" Class="pa-6 d-flex align-center justify-center mud-card-hover" Style="height: 400px;">
+            <MudStack AlignItems="AlignItems.Center">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">파트너카드 데이터를 가져오는 중입니다...</MudText>
+            </MudStack>
+        </MudCard>
+    }
+    else
+    {
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary">
+            <MudTabPanel Text="공통">
+                <ChildContent>
+                    <OpticianInfo Data="@partnerCard"></OpticianInfo>
+                </ChildContent>
+            </MudTabPanel>
+            <MudTabPanel Text="매출">
+                <ChildContent>
+                    <Orders Data="@partnerCard.Orders"></Orders>
+                </ChildContent>
+            </MudTabPanel>
+            <MudTabPanel Text="판매">
+                <ChildContent>
+                    <SalesOrders Data="@partnerCard.SalesOrders"></SalesOrders>
+                </ChildContent>
+            </MudTabPanel>
+            <MudTabPanel Text="반품">
+                <ChildContent>
+                    <Returns Data="@partnerCard.ReturnOrders"></Returns>
+                </ChildContent>
+            </MudTabPanel>
+            <MudTabPanel Text="이력">
+                <ChildContent>
+                    <Histories Data="@partnerCard.OpticianHistories" OpticianId="@partnerCard.Optician.Id"></Histories>
+                </ChildContent>
+            </MudTabPanel>
+            <MudTabPanel Text="클레임">
+                <ChildContent>
+                    <Claims Data="@partnerCard.Claims" OpticianId="@partnerCard.Optician.Id"></Claims>
+                </ChildContent>
+            </MudTabPanel>
+        </MudTabs>
+    }
+</MudStack>
+
+<style>
+    .mud-card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    transition: all 0.3s ease-in-out;
+    }
+</style>
+
+@inject IPartnerCardClientService partnerCardService
+@inject ISnackbar Snackbar
+
+@code {
+
+    [Parameter] public string? OpticianId { get; set; }
+
+    private bool _isLoading = false;
+    private Optician _optician = new Optician();
+    private PartnerCardDto? partnerCard;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // URL 파라미터로 안경원 ID가 전달된 경우
+        if (!string.IsNullOrEmpty(OpticianId))
+        {
+            await LoadOpticianById(OpticianId);
+        }
+    }
+
+    private async Task LoadOpticianById(string opticianId)
+    {
+        try
+        {
+            // 안경원 ID로 안경원 정보 조회
+            partnerCard = await partnerCardService.GetPartnerCardAsync(opticianId);
+
+            if (partnerCard != null)
+            {
+                _optician = partnerCard.Optician ?? new Optician();
+            }
+            else
+            {
+                Snackbar.Add("안경원 정보를 찾을 수 없습니다.", Severity.Warning);
+                _optician = new Optician();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"안경원 정보를 불러오는데 실패하였습니다. Message: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task HandleOpticianSelected(Optician optician)
+    {
+        _optician = optician;
+
+        if (_optician != null && !string.IsNullOrEmpty(_optician.Id))
+        {
+            _isLoading = true;
+
+            try
+            {
+                partnerCard = await partnerCardService.GetPartnerCardAsync(_optician.Id);
+            }
+            finally
+            {
+                _isLoading = false;
+            }
+        }
+        else
+        {
+            partnerCard = null;
+        }
+    }
+
+    private async Task RefreshData()
+    {
+        if (_optician != null && !string.IsNullOrEmpty(_optician.Id))
+        {
+            await HandleOpticianSelected(_optician);
+        }
+    }
+}

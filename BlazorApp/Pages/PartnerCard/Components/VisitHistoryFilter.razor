@@ -1,0 +1,203 @@
+﻿@using System.ComponentModel.DataAnnotations
+
+<MudExpansionPanels Elevation="0" Class="mb-4">
+    <MudExpansionPanel Text="필터 및 검색" Icon="@Icons.Material.Filled.FilterList" IsInitiallyExpanded="HasAnyFilter">
+        <MudGrid>
+            @* <!-- 검색 필드 --> *@
+            @* <MudItem xs="12" Class="mb-3"> *@
+            @*     <MudTextField @bind-Value="SearchText" *@
+            @*                   Label="검색" *@
+            @*                   Placeholder="방문사유, 방문목적, 비고로 검색..." *@
+            @*                   Adornment="Adornment.Start" *@
+            @*                   AdornmentIcon="Icons.Material.Filled.Search" *@
+            @*                   Clearable="true" *@
+            @*                   DebounceInterval="300" *@
+            @*                   OnDebounceIntervalElapsed="OnSearchChanged" /> *@
+            @* </MudItem> *@
+
+            <!-- 날짜 필터 -->
+            <MudItem xs="12" sm="4">
+                <MudDatePicker @bind-Date="StartDate"
+                               Label="시작일"
+                               Placeholder="시작일 선택"
+                               DateFormat="yyyy-MM-dd"
+                               MaxDate="DateTime.Today"
+                               Clearable="true" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudDatePicker @bind-Date="EndDate"
+                               Label="종료일"
+                               Placeholder="종료일 선택"
+                               DateFormat="yyyy-MM-dd"
+                               MaxDate="DateTime.Today"
+                               MinDate="StartDate"
+                               Clearable="true" />
+            </MudItem>
+            <MudItem xs="12" sm="4" Class="d-flex align-center gap-2 flex-wrap">
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Secondary"
+                           @onclick="ClearAllFilters"
+                           StartIcon="Icons.Material.Filled.Clear"
+                           Disabled="!HasAnyFilter"
+                           Size="Size.Small">
+                    전체 초기화
+                </MudButton>
+            </MudItem>
+
+            <!-- 빠른 필터 버튼들 -->
+            <MudItem xs="12">
+                <MudText Typo="Typo.caption" Class="mb-2">빠른 필터:</MudText>
+                <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small">
+                    <MudButton @onclick="() => ApplyQuickDateFilter(7)">최근 7일</MudButton>
+                    <MudButton @onclick="() => ApplyQuickDateFilter(30)">최근 30일</MudButton>
+                    <MudButton @onclick="() => ApplyQuickDateFilter(90)">최근 3개월</MudButton>
+                    <MudButton @onclick="ApplyThisMonthFilter">이번 달</MudButton>
+                </MudButtonGroup>
+            </MudItem>
+        </MudGrid>
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+<!-- 활성 필터 표시 -->
+@if (HasAnyFilter)
+{
+    <MudPaper Class="pa-3 mb-3" Elevation="1">
+        <MudText Typo="Typo.subtitle2" Class="mb-2">
+            <MudIcon Icon="Icons.Material.Filled.FilterList" Size="Size.Small" Class="mr-1" />
+            적용된 필터
+        </MudText>
+        <MudChipSet T="string">
+            @if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                <MudChip T="string"
+                         Text="@($"검색: {SearchText}")"
+                         OnClose="@((chip) => ClearSearch())"
+                         CloseIcon="Icons.Material.Filled.Close" />
+            }
+            @if (StartDate.HasValue)
+            {
+                <MudChip T="string"
+                         Text="@($"시작일: {StartDate.Value:yyyy-MM-dd}")"
+                         OnClose="@((chip) => ClearStartDate())"
+                         CloseIcon="Icons.Material.Filled.Close" />
+            }
+            @if (EndDate.HasValue)
+            {
+                <MudChip T="string"
+                         Text="@($"종료일: {EndDate.Value:yyyy-MM-dd}")"
+                         OnClose="@((chip) => ClearEndDate())"
+                         CloseIcon="Icons.Material.Filled.Close" />
+            }
+        </MudChipSet>
+    </MudPaper>
+}
+
+@code {
+    private DateTime? _startDate;
+    private DateTime? _endDate;
+    private string _searchText = string.Empty;
+
+    [Parameter]
+    public DateTime? StartDate
+    {
+        get => _startDate;
+        set
+        {
+            if (_startDate != value)
+            {
+                _startDate = value;
+                StartDateChanged.InvokeAsync(value);
+                NotifyFilterChanged();
+            }
+        }
+    }
+
+    [Parameter]
+    public DateTime? EndDate
+    {
+        get => _endDate;
+        set
+        {
+            if (_endDate != value)
+            {
+                _endDate = value;
+                EndDateChanged.InvokeAsync(value);
+                NotifyFilterChanged();
+            }
+        }
+    }
+
+    [Parameter]
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (_searchText != value)
+            {
+                _searchText = value ?? string.Empty;
+                SearchTextChanged.InvokeAsync(_searchText);
+            }
+        }
+    }
+
+    [Parameter] public EventCallback<DateTime?> StartDateChanged { get; set; }
+    [Parameter] public EventCallback<DateTime?> EndDateChanged { get; set; }
+    [Parameter] public EventCallback<string> SearchTextChanged { get; set; }
+    [Parameter] public EventCallback OnFilterCleared { get; set; }
+    [Parameter] public EventCallback<FilterChangedEventArgs> OnFilterChanged { get; set; }
+
+    private bool HasActiveFilter => StartDate.HasValue || EndDate.HasValue;
+    private bool HasAnyFilter => HasActiveFilter || !string.IsNullOrWhiteSpace(SearchText);
+
+    private async Task ClearAllFilters()
+    {
+        StartDate = null;
+        EndDate = null;
+        SearchText = string.Empty;
+
+        if (OnFilterCleared.HasDelegate)
+        {
+            await OnFilterCleared.InvokeAsync();
+        }
+    }
+
+    // 수정된 이벤트 핸들러들
+    private void ClearSearch() => SearchText = string.Empty;
+    private void ClearStartDate() => StartDate = null;
+    private void ClearEndDate() => EndDate = null;
+
+    private void ApplyQuickDateFilter(int days)
+    {
+        EndDate = DateTime.Today;
+        StartDate = DateTime.Today.AddDays(-days);
+    }
+
+    private void ApplyThisMonthFilter()
+    {
+        var today = DateTime.Today;
+        StartDate = new DateTime(today.Year, today.Month, 1);
+        EndDate = today;
+    }
+
+    private async Task OnSearchChanged(string searchText)
+    {
+        SearchText = searchText;
+        await NotifyFilterChanged();
+    }
+
+    private async Task NotifyFilterChanged()
+    {
+        if (OnFilterChanged.HasDelegate)
+        {
+            var args = new FilterChangedEventArgs
+                {
+                    StartDate = StartDate,
+                    EndDate = EndDate,
+                    SearchText = SearchText,
+                    HasActiveFilter = HasAnyFilter
+                };
+            await OnFilterChanged.InvokeAsync(args);
+        }
+    }
+}

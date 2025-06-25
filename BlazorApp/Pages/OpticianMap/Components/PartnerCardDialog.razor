@@ -1,0 +1,130 @@
+﻿@using BlazorApp.Pages.PartnerCard.Components
+@using BlazorApp.Services.PartnerCard
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center">
+            <MudIcon Icon="Icons.Material.Filled.BusinessCenter" Class="mr-3" />
+            <MudText Typo="Typo.h6">파트너카드 - @(Optician?.Name ?? "안경원")</MudText>
+        </div>
+    </TitleContent>
+
+    <DialogContent>
+        <div style="min-height: 500px; min-width: 800px;">
+            @if (_isLoading || partnerCard == null)
+            {
+                <MudCard Elevation="0" Class="pa-6 d-flex align-center justify-center" Style="height: 400px;">
+                    <MudStack AlignItems="AlignItems.Center">
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                        <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">파트너카드 데이터를 가져오는 중입니다...</MudText>
+                    </MudStack>
+                </MudCard>
+            }
+            else
+            {
+                <MudTabs Elevation="1" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4" Color="Color.Primary">
+                    <MudTabPanel Text="공통">
+                        <ChildContent>
+                            <OpticianInfo Data="@partnerCard"></OpticianInfo>
+                        </ChildContent>
+                    </MudTabPanel>
+                    <MudTabPanel Text="매출">
+                        <ChildContent>
+                            <Orders Data="@partnerCard.Orders"></Orders>
+                        </ChildContent>
+                    </MudTabPanel>
+                    <MudTabPanel Text="판매">
+                        <ChildContent>
+                            <SalesOrders Data="@partnerCard.SalesOrders"></SalesOrders>
+                        </ChildContent>
+                    </MudTabPanel>
+                    <MudTabPanel Text="반품">
+                        <ChildContent>
+                            <Returns Data="@partnerCard.ReturnOrders"></Returns>
+                        </ChildContent>
+                    </MudTabPanel>
+                    <MudTabPanel Text="이력">
+                        <ChildContent>
+                            <Histories Data="@partnerCard.OpticianHistories" OpticianId="@Optician.Id"></Histories>
+                        </ChildContent>
+                    </MudTabPanel>
+                    <MudTabPanel Text="클레임">
+                        <ChildContent>
+                            <Claims Data="@partnerCard.Claims" OpticianId="@Optician.Id"></Claims>
+                        </ChildContent>
+                    </MudTabPanel>
+                </MudTabs>
+            }
+        </div>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="RefreshData"
+                   Variant="Variant.Text"
+                   Color="Color.Primary"
+                   Disabled="_isLoading"
+                   StartIcon="@Icons.Material.Filled.Refresh">
+            새로고침
+        </MudButton>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">닫기</MudButton>
+        <MudButton OnClick="OpenFullPage"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.OpenInNew">
+            전체 화면으로 보기
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject IPartnerCardClientService partnerCardService
+@inject NavigationManager NavigationManager
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public Optician Optician { get; set; }
+
+    private bool _isLoading = false;
+    private PartnerCardDto? partnerCard;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Optician != null && !string.IsNullOrEmpty(Optician.Id))
+        {
+            await LoadPartnerCardData();
+        }
+    }
+
+    private async Task LoadPartnerCardData()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            partnerCard = await partnerCardService.GetPartnerCardAsync(Optician.Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"파트너카드 데이터 로드 실패: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshData()
+    {
+        await LoadPartnerCardData();
+    }
+
+    void Cancel() => MudDialog.Cancel();
+
+    void OpenFullPage()
+    {
+        // 전체 페이지로 이동 (URL 파라미터 포함)
+        NavigationManager.NavigateTo($"/partnercard/{Optician.Id}");
+        MudDialog.Close();
+    }
+}

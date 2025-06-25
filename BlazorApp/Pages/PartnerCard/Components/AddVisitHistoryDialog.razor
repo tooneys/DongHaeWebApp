@@ -1,0 +1,151 @@
+﻿@using BlazorApp.Models
+@using BlazorApp.Services.PartnerCard
+@inject IPartnerCardClientService PartnerCardService
+@inject ISnackbar Snackbar
+@inject ILogger<AddVisitHistoryDialog> Logger
+@inherits MudComponentBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="Icons.Material.Filled.Add" Class="mr-3" />
+            새 방문이력 추가
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@isFormValid" ValidationDelay="300">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudDatePicker @bind-Date="newHistoryDate"
+                    Label="방문일자"
+                    Required="true"
+                    RequiredError="방문일자를 선택해주세요."
+                    DateFormat="yyyy-MM-dd"
+                    MaxDate="DateTime.Today" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="newHistory.TX_REASON"
+                    Label="방문사유"
+                    Required="true"
+                    RequiredError="방문사유를 입력해주세요."
+                    MaxLength="100"
+                    Counter="100"
+                    Immediate="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="newHistory.TX_PURPOSE"
+                    Label="방문목적"
+                    Required="true"
+                    RequiredError="방문목적을 입력해주세요."
+                    MaxLength="100"
+                    Counter="100"
+                    Immediate="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="newHistory.TX_NOTE"
+                    Label="비고"
+                    Lines="3"
+                    MaxLength="500"
+                    Counter="500" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton @onclick="Cancel" Disabled="isSaving">취소</MudButton>
+        <MudButton Color="Color.Primary"
+        Variant="Variant.Filled"
+        @onclick="SaveNewHistory"
+        Disabled="!isFormValid || isSaving">
+            @if (isSaving)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">저장 중...</MudText>
+            }
+            else
+            {
+                <MudText>저장</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public string CD_CUST { get; set; } = string.Empty;
+
+    private bool isFormValid = false;
+    private bool isSaving = false;
+    private MudForm form = null!;
+    private OpticianHistoryDto newHistory = new();
+    private DateTime? newHistoryDate = DateTime.Today;
+
+    // 취소 토큰으로 비동기 작업 취소 가능
+    private CancellationTokenSource? cancellationTokenSource;
+
+    // protected override void OnInitialized()
+    // {
+    //     ResetForm();
+    // }
+
+    protected override void OnParametersSet()
+    {
+        ResetForm();
+        base.OnParametersSet();
+    }
+
+    private void ResetForm()
+    {
+        newHistory = new OpticianHistoryDto();
+        newHistoryDate = DateTime.Today;
+    }
+
+    private void Cancel()
+    {
+        cancellationTokenSource?.Cancel();
+        MudDialog.Cancel();
+    }
+
+    private async Task SaveNewHistory()
+    {
+        if (!isFormValid || isSaving) return;
+
+        isSaving = true;
+        cancellationTokenSource = new CancellationTokenSource();
+
+        try
+        {
+            newHistory.DT_COMP = newHistoryDate?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd");
+            newHistory.CD_CUST = CD_CUST ?? throw new ArgumentNullException(nameof(CD_CUST));
+
+            var savedHistory = await PartnerCardService.AddVisitHistoryAsync(newHistory);
+
+            if (!cancellationTokenSource.Token.IsCancellationRequested)
+            {
+                Snackbar.Add("방문이력이 성공적으로 추가되었습니다.", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(savedHistory));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // 사용자가 취소한 경우
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error saving visit history");
+            Snackbar.Add($"저장 중 오류가 발생했습니다: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+            cancellationTokenSource?.Dispose();
+            cancellationTokenSource = null;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        cancellationTokenSource?.Dispose();
+    }
+}

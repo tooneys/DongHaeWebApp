@@ -1,0 +1,82 @@
+﻿<MudAutocomplete 
+T="Optician" 
+Label="안경원" 
+Placeholder="안경원을 검색하세요.."
+Value="Value" 
+ValueChanged="OnValueChanged"
+SearchFunc="SearchStates"
+ToStringFunc="@(state => state?.Name ?? string.Empty)"
+Clearable="true"
+AdornmentIcon="@Icons.Material.Filled.Search" 
+AdornmentColor="Color.Primary" />
+
+@inject ICommonClientService commonClientService
+@inject INotificationService notificationService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+@code {
+    [Parameter]
+    public Optician Value { get; set; } = new Optician();
+
+    [Parameter]
+    public EventCallback<Optician> ValueChanged { get; set; }
+
+    private async Task OnValueChanged(Optician value)
+    {
+        await ValueChanged.InvokeAsync(value); // Notify the parent component
+    }
+
+    private List<Optician> _states = new List<Optician>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await Task.Delay(100);
+
+            // Load data from API or other source
+            _states = await commonClientService.GetOpticiansAsync();
+
+            StateHasChanged(); // UI 갱신
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            notificationService.ShowError(ex.Message);
+            Navigation.NavigateTo("/login", true);
+        }
+        catch (Exception ex)
+        {
+            notificationService.ShowError($"데이터 로드 실패: {ex.Message}");
+        }
+    }
+
+    private async Task<IEnumerable<Optician>> SearchStates(string value, CancellationToken token)
+    {
+        try
+        {
+            // In real life use an asynchronous function for fetching data from an api.
+            await Task.Delay(5, token);
+
+            // if text is null or empty, don't return values (drop-down will not open)
+            if (string.IsNullOrEmpty(value))
+            {
+                return _states ?? Enumerable.Empty<Optician>();
+            }
+
+            var results = (_states ?? Enumerable.Empty<Optician>())
+                .Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+
+            return results;
+        }
+        catch (OperationCanceledException)
+        {
+            return Enumerable.Empty<Optician>();
+        }
+        catch (Exception ex)
+        {
+            notificationService.ShowError($"데이터 로드 실패: {ex.Message}");
+            return Enumerable.Empty<Optician>();
+        }
+    }
+}

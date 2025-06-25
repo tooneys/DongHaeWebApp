@@ -1,0 +1,17 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-height: 80vh; overflow-y: auto; text-align: center;">
+            <img src="@ImageUrl" style="max-width: 100%; height: auto;" alt="확대된 이미지" />
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Close">닫기</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public string ImageUrl { get; set; }
+
+    void Close() => MudDialog.Close();
+}
