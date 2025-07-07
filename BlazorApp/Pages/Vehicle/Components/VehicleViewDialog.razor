@@ -1,0 +1,118 @@
+﻿@inherits MudComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudField Label="등록일자" Variant="Variant.Text">
+                    <MudText Typo="Typo.body1">@vehicle.DT_COMP?.ToString("yyyy년 MM월 dd일")</MudText>
+                </MudField>
+            </MudItem>
+            
+            <MudItem xs="12" md="6">
+                <MudField Label="사원코드" Variant="Variant.Text">
+                    <MudChip T="string" Color="Color.Primary" Size="Size.Small">@vehicle.CD_EMP</MudChip>
+                </MudField>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudField Label="차량번호" Variant="Variant.Text">
+                    <MudText Typo="Typo.h6" Color="Color.Primary">@vehicle.NO_CAR</MudText>
+                </MudField>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudField Label="운행지역" Variant="Variant.Text">
+                    <MudText Typo="Typo.h6" Color="Color.Primary">@vehicle.TX_AREA</MudText>
+                </MudField>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudDivider Class="my-4" />
+                <MudText Typo="Typo.h6" Class="mb-3">운행 정보</MudText>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4" Style="background-color: var(--mud-palette-info-lighten);">
+                    <MudStack AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Color="Color.Info" Size="Size.Large" />
+                        <MudText Typo="Typo.caption">운행 전 계기판</MudText>
+                        <MudText Typo="Typo.h5">@vehicle.VL_BEFORE.ToString("N0") km</MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4" Style="background-color: var(--mud-palette-success-lighten);">
+                    <MudStack AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.Stop" Color="Color.Success" Size="Size.Large" />
+                        <MudText Typo="Typo.caption">운행 후 계기판</MudText>
+                        <MudText Typo="Typo.h5">@vehicle.VL_AFTER.ToString("N0") km</MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4" Style="background-color: var(--mud-palette-warning-lighten);">
+                    <MudStack AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.Route" Color="Color.Warning" Size="Size.Large" />
+                        <MudText Typo="Typo.caption">총 운행거리</MudText>
+                        <MudText Typo="Typo.h4" Color="Color.Warning">@vehicle.VL_DISTANCE.ToString("N1") km</MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudField Label="연료량" Variant="Variant.Text">
+                    <MudStack Row AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.LocalGasStation" Color="Color.Error" />
+                        <MudText Typo="Typo.h6">@vehicle.VL_FUEL.ToString("N1") L</MudText>
+                    </MudStack>
+                </MudField>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudField Label="연비 (추정)" Variant="Variant.Text">
+                    <MudStack Row AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.Speed" Color="Color.Tertiary" />
+                        <MudText Typo="Typo.h6">
+                            @(vehicle.VL_FUEL > 0 ? (vehicle.VL_DISTANCE / vehicle.VL_FUEL).ToString("N1") : "0") km/L
+                        </MudText>
+                    </MudStack>
+                </MudField>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    
+    <DialogActions>
+        <MudButton OnClick="Close">닫기</MudButton>
+        <MudButton Color="Color.Warning" 
+                  Variant="Variant.Filled"
+                  StartIcon="@Icons.Material.Filled.Edit"
+                  OnClick="Edit">
+            수정
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public Vehicle Vehicle { get; set; } = new();
+
+    private Vehicle vehicle = new();
+
+    protected override void OnInitialized()
+    {
+        vehicle = Vehicle;
+    }
+
+    private void Close()
+    {
+        MudDialog.Close();
+    }
+
+    private void Edit()
+    {
+        MudDialog.Close(DialogResult.Ok("edit"));
+    }
+}

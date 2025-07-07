@@ -1,0 +1,228 @@
+﻿@using MudBlazor
+@inherits MudComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@vehicle" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudDatePicker Label="등록일자"
+                                @bind-Date="vehicle.DT_COMP"
+                                For="@(() => vehicle.DT_COMP)"
+                                Required="true"
+                                DateFormat="yyyy-MM-dd"
+                                Variant="Variant.Outlined"
+                                HelperText="차량 운행 날짜를 선택하세요" />
+                </MudItem>
+                
+                <MudItem xs="12" md="6">
+                    <MudTextField Label="사원코드" 
+                                @bind-Value="vehicle.CD_EMP"
+                                For="@(() => vehicle.CD_EMP)"
+                                Required="true"
+                                Variant="Variant.Outlined"
+                                Placeholder="사원코드를 입력하세요"
+                                HelperText="운전자의 사원코드를 입력하세요" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField Label="차량번호" 
+                                @bind-Value="vehicle.NO_CAR"
+                                  For="@(() => vehicle.NO_CAR)"
+                                Required="true"
+                                Variant="Variant.Outlined"
+                                Placeholder="예: 12가3456"
+                                HelperText="차량번호를 정확히 입력해주세요" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField Label="운행지역"
+                                  @bind-Value="vehicle.TX_AREA"
+                                  For="@(() => vehicle.TX_AREA)"
+                                  Required="true"
+                                  Variant="Variant.Outlined"
+                                  Placeholder="예: 광명"
+                                  HelperText="운행지역을 정확히 입력해주세요" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudDivider Class="my-4" />
+                    <MudText Typo="Typo.h6" Class="mb-3">운행 정보</MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudNumericField Label="운행 전 계기판 (km)" 
+                                   @bind-Value="vehicle.VL_BEFORE"
+                                   For="@(() => vehicle.VL_BEFORE)"
+                                   Variant="Variant.Outlined"
+                                   Min="0"
+                                   Format="N1"
+                                   @onchange="@(() => CalculateDistance())"
+                                   HelperText="운행 시작 시 계기판 수치" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudNumericField Label="운행 후 계기판 (km)" 
+                                   @bind-Value="vehicle.VL_AFTER"
+                                   For="@(() => vehicle.VL_AFTER)"
+                                   Variant="Variant.Outlined"
+                                   Min="0"
+                                   Format="N1"
+                                   @onchange="@(() => CalculateDistance())"
+                                   HelperText="운행 종료 시 계기판 수치" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudNumericField Label="운행거리 (km)" 
+                                   @bind-Value="vehicle.VL_DISTANCE"
+                                   For="@(() => vehicle.VL_DISTANCE)"
+                                   Variant="Variant.Outlined"
+                                   ReadOnly="true"
+                                   Format="N1"
+                                   HelperText="자동으로 계산됩니다"
+                                   Style="background-color: #f5f5f5;" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudNumericField Label="연료량 (L)" 
+                                   @bind-Value="vehicle.VL_FUEL"
+                                   For="@(() => vehicle.VL_FUEL)"
+                                   Variant="Variant.Filled"
+                                   Min="0"
+                                   Format="N1"
+                                   HelperText="주유한 연료량을 입력하세요" />
+                </MudItem>
+
+                @if (vehicle.VL_DISTANCE > 0 && vehicle.VL_FUEL > 0)
+                {
+                    <MudItem xs="12">
+                        <MudAlert Severity="Severity.Info" Class="mt-2">
+                            <MudText>
+                                <strong>예상 연비:</strong> @((vehicle.VL_DISTANCE / vehicle.VL_FUEL).ToString("N1")) km/L
+                            </MudText>
+                        </MudAlert>
+                    </MudItem>
+                }
+
+                <MudItem xs="12">
+                    <MudValidationSummary />
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+    
+    <DialogActions>
+        <MudButton OnClick="Cancel">취소</MudButton>
+        <MudButton Color="Color.Primary" 
+                  Variant="Variant.Filled"
+                  OnClick="Submit"
+                  Disabled="@isSubmitting">
+            @if (isSubmitting)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                <MudText Class="ms-2">처리중...</MudText>
+            }
+            else
+            {
+                @(IsEdit ? "수정" : "등록")
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public Vehicle? Vehicle { get; set; }
+
+    private Vehicle vehicle = new();
+    private bool isSubmitting = false;
+    private bool IsEdit => Vehicle != null;
+
+    protected override void OnInitialized()
+    {
+        if (IsEdit && Vehicle != null)
+        {
+            // 수정 모드: 기존 데이터 복사
+            vehicle = new Vehicle
+            {
+                SEQ = Vehicle.SEQ,
+                DT_COMP = Vehicle.DT_COMP,
+                CD_EMP = Vehicle.CD_EMP,
+                NO_CAR = Vehicle.NO_CAR,
+                TX_AREA = Vehicle.TX_AREA,
+                VL_BEFORE = Vehicle.VL_BEFORE,
+                VL_AFTER = Vehicle.VL_AFTER,
+                VL_DISTANCE = Vehicle.VL_DISTANCE,
+                VL_FUEL = Vehicle.VL_FUEL
+            };
+        }
+        else
+        {
+            // 등록 모드: 기본값 설정
+            vehicle.DT_COMP = DateTime.Today;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await Submit();
+    }
+
+    private async Task Submit()
+    {
+        isSubmitting = true;
+        
+        try
+        {
+            // 운행거리 재계산
+            CalculateDistance();
+            
+            // 시뮬레이션 지연
+            await Task.Delay(500);
+            
+            MudDialog.Close(DialogResult.Ok(vehicle));
+        }
+        catch (Exception ex)
+        {
+            // 오류 처리는 부모 컴포넌트에서 수행
+            MudDialog.Close(DialogResult.Cancel());
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    // 올바른 이벤트 핸들러 시그니처
+    private void OnBeforeValueChanged(decimal value)
+    {
+        vehicle.VL_BEFORE = value;
+        CalculateDistance();
+    }
+
+    private void OnAfterValueChanged(decimal value)
+    {
+        vehicle.VL_AFTER = value;
+        CalculateDistance();
+    }
+
+    private void CalculateDistance()
+    {
+        if (vehicle.VL_AFTER > vehicle.VL_BEFORE)
+        {
+            vehicle.VL_DISTANCE = vehicle.VL_AFTER - vehicle.VL_BEFORE;
+        }
+        else
+        {
+            vehicle.VL_DISTANCE = 0;
+        }
+        StateHasChanged();
+    }
+}

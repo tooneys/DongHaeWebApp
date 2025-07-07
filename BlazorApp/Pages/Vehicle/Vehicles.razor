@@ -1,0 +1,214 @@
+﻿@page "/vehicles"
+@using BlazorApp.Pages.Vehicle.Components
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>차량일지 관리</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudPaper Class="pa-4">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.h4">차량일지 관리</MudText>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="@(() => OpenCreateDialog())">
+                        새 일지 등록
+                    </MudButton>
+                </MudStack>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudDataGrid T="Vehicle"
+                             Items="@vehicles"
+                             Filterable="true"
+                             SortMode="SortMode.Multiple"
+                             Hover="true"
+                             Dense="true">
+                    <Columns>
+                        <PropertyColumn Property="x => x.DT_COMP" Title="등록일자" Sortable="true">
+                            <CellTemplate>
+                                <MudText>@context.Item.DT_COMP?.ToString("yyyy-MM-dd")</MudText>
+                            </CellTemplate>
+                        </PropertyColumn>
+
+                        <PropertyColumn Property="x => x.CD_EMP" Title="사원코드" />
+                        <PropertyColumn Property="x => x.NO_CAR" Title="차량번호" />
+                        <PropertyColumn Property="x => x.TX_AREA" Title="운행지역" />
+
+                        <PropertyColumn Property="x => x.VL_BEFORE" Title="운행 전 계기판" Sortable="true">
+                            <CellTemplate>
+                                <MudText>@context.Item.VL_BEFORE.ToString("N0") km</MudText>
+                            </CellTemplate>
+                        </PropertyColumn>
+
+                        <PropertyColumn Property="x => x.VL_AFTER" Title="운행 후 계기판" Sortable="true">
+                            <CellTemplate>
+                                <MudText>@context.Item.VL_AFTER.ToString("N0") km</MudText>
+                            </CellTemplate>
+                        </PropertyColumn>
+
+                        <PropertyColumn Property="x => x.VL_DISTANCE" Title="운행거리" Sortable="true">
+                            <CellTemplate>
+                                <MudChip Color="Color.Info" Size="Size.Small">
+                                    @context.Item.VL_DISTANCE.ToString("N1") km
+                                </MudChip>
+                            </CellTemplate>
+                        </PropertyColumn>
+
+                        <PropertyColumn Property="x => x.VL_FUEL" Title="연료량" Sortable="true">
+                            <CellTemplate>
+                                <MudText>@context.Item.VL_FUEL.ToString("N1") L</MudText>
+                            </CellTemplate>
+                        </PropertyColumn>
+
+                        <TemplateColumn Title="관리" Sortable="false">
+                            <CellTemplate>
+                                <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                   Color="Color.Info"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenViewDialog(context.Item))" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Color="Color.Warning"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenEditDialog(context.Item))" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => DeleteVehicle(context.Item))" />
+                                </MudButtonGroup>
+                            </CellTemplate>
+                        </TemplateColumn>
+                    </Columns>
+                </MudDataGrid>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<Vehicle> vehicles = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVehicles();
+    }
+
+    private async Task LoadVehicles()
+    {
+        vehicles = GetSampleData();
+        await Task.CompletedTask;
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var parameters = new DialogParameters();
+        var options = new DialogOptions
+            {
+                MaxWidth = MaxWidth.Large,
+                FullWidth = true,
+                CloseButton = true,
+            };
+
+        var dialog = await DialogService.ShowAsync<VehicleFormDialog>("새 차량일지 등록", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is Vehicle newVehicle)
+        {
+            // TODO: API 호출로 등록
+            newVehicle.SEQ = vehicles.Count + 1;
+            vehicles.Add(newVehicle);
+            Snackbar.Add("차량일지가 성공적으로 등록되었습니다.", Severity.Success);
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenViewDialog(Vehicle vehicle)
+    {
+        var parameters = new DialogParameters { ["Vehicle"] = vehicle };
+        var options = new DialogOptions
+            {
+                MaxWidth = MaxWidth.Large,
+                FullWidth = true,
+                CloseButton = true
+            };
+
+        await DialogService.ShowAsync<VehicleViewDialog>("차량일지 상세", parameters, options);
+    }
+
+    private async Task OpenEditDialog(Vehicle vehicle)
+    {
+        var parameters = new DialogParameters { ["Vehicle"] = vehicle };
+        var options = new DialogOptions
+            {
+                MaxWidth = MaxWidth.Large,
+                FullWidth = true,
+                CloseButton = true,
+            };
+
+        var dialog = await DialogService.ShowAsync<VehicleFormDialog>("차량일지 수정", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is Vehicle updatedVehicle)
+        {
+            // TODO: API 호출로 수정
+            var index = vehicles.FindIndex(v => v.SEQ == updatedVehicle.SEQ);
+            if (index >= 0)
+            {
+                vehicles[index] = updatedVehicle;
+                Snackbar.Add("차량일지가 성공적으로 수정되었습니다.", Severity.Success);
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task DeleteVehicle(Vehicle vehicle)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "삭제 확인",
+            $"차량번호 '{vehicle.TX_AREA}'의 일지를 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.",
+            yesText: "삭제", cancelText: "취소");
+
+        if (result == true)
+        {
+            // TODO: API 호출로 삭제
+            vehicles.Remove(vehicle);
+            Snackbar.Add("차량일지가 성공적으로 삭제되었습니다.", Severity.Success);
+            StateHasChanged();
+        }
+    }
+
+    private List<Vehicle> GetSampleData()
+    {
+        return new List<Vehicle>
+        {
+            new Vehicle
+            {
+                SEQ = 1,
+                DT_COMP = DateTime.Today,
+                CD_EMP = "EMP001",
+                NO_CAR = "12가3456",
+                TX_AREA = "일산",
+                VL_BEFORE = 10000m,
+                VL_AFTER = 10150m,
+                VL_DISTANCE = 150m,
+                VL_FUEL = 15.5m
+            },
+            new Vehicle
+            {
+                SEQ = 2,
+                DT_COMP = DateTime.Today.AddDays(-1),
+                CD_EMP = "EMP002",
+                NO_CAR = "34나7890",
+                TX_AREA = "광명",
+                VL_BEFORE = 20000m,
+                VL_AFTER = 20080m,
+                VL_DISTANCE = 80m,
+                VL_FUEL = 8.2m
+            }
+        };
+    }
+}
