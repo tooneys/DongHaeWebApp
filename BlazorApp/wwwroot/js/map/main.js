@@ -48,7 +48,9 @@ window.naverMapUtils = {
                 const markerObj = MarkerManager.createMarker(
                     map,
                     new naver.maps.LatLng(marker.lat, marker.lng),
-                    marker.isReg
+                    marker.isReg,
+                    marker.opticianManage,
+                    marker.id
                 );
                 MarkerManager.addClickHandler(markerObj, () => {
                     dotNetRef.invokeMethodAsync('OnMarkerClicked', JSON.stringify(marker));
@@ -66,5 +68,9 @@ window.naverMapUtils = {
             console.error(`지도 초기화 실패: ${error.stack}`);
             throw error;
         }
+    },
+
+    updateMarkerColor: async (markerId, isReg, opticianManage) => {
+        MarkerManager.updateMarkerIcon(markerId, isReg, opticianManage);
     }
 };

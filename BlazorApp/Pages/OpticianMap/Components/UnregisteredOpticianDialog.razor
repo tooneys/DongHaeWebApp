@@ -9,52 +9,80 @@
             <MudText Typo="Typo.h5" Class="mb-4">
                 <MudIcon Icon="Icons.Material.Filled.AddBusiness" Class="mr-2" Color="Color.Warning" />
                 @Marker.BplcNm
+                <MudChip T="string" Color="@GetOpticianTypeColor(Marker.OpticianManage)" Class="ml-2">
+                    @Marker.OpticianManageName
+                </MudChip>
             </MudText>
-            
+
             <MudDivider Class="mb-4" />
-            
+
             <MudAlert Severity="Severity.Warning" Class="mb-4">
                 이 안경원은 아직 우리 서비스에 등록되지 않았습니다.
             </MudAlert>
 
             <UnRegVisitHistoryTable Data="@Data"
-                               IsLoading="@(Data == null)"
-                               HasData="@(Data?.Any() == true)" />
+            IsLoading="@(Data == null)"
+            HasData="@(Data?.Any() == true)" />
         </div>
     </DialogContent>
-    
+
     <DialogActions>
         <MudButton OnClick="Cancel" Variant="Variant.Text" Disabled="@isProcessing">닫기</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                   StartIcon="@(isProcessing ? Icons.Material.Filled.HourglassEmpty : Icons.Material.Filled.Add)"
-                   @onclick="OpenAddDialog"
-                   Disabled="@isDialogOpen">
+        StartIcon="@(isProcessing ? Icons.Material.Filled.HourglassEmpty : Icons.Material.Filled.Add)"
+        @onclick="OpenAddDialog"
+        Disabled="@isDialogOpen">
             @(isProcessing ? "처리 중..." : "새 방문이력 추가")
         </MudButton>
+
+        @if (Marker.OpticianManage == "001")
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Success"
+            OnClick="@(()=>ChangeOpticianManage("002"))"
+            Disabled="@isProcessing">
+                관리제외점으로 변경
+            </MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Info"
+            OnClick="@(()=>ChangeOpticianManage("001"))"
+            Disabled="@isProcessing">
+                신규관리점으로 변경
+            </MudButton>
+        }
+
     </DialogActions>
 </MudDialog>
 
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public OpticianMapDto Marker { get; set; }
-    
+
     private List<UnRegMarkerHistory> Data { get; set; } = new();
     private bool isProcessing = false;
     private bool isDialogOpen = false;
+
+    Color GetOpticianTypeColor(string code) => code switch
+    {
+        "001" => Color.Primary,
+        "002" => Color.Warning,
+        _ => Color.Default
+    };
 
     protected override async Task OnInitializedAsync()
     {
         Data = await OpticianMapClientService.GetVisitHistoryById(Marker);
     }
-    
+
     void Cancel() 
     {
         if (!isProcessing)
         {
-            MudDialog.Cancel();
+            MudDialog.Close(DialogResult.Ok(Marker));
         }
     }
-    
+
     private async Task OpenAddDialog()
     {
         if (isDialogOpen) return; // 중복 클릭 방지
@@ -93,6 +121,26 @@
         finally
         {
             isDialogOpen = false;
+            isProcessing = false;
+        }
+    }
+
+    // 관리점 구분 변경
+    private async Task ChangeOpticianManage(string newCode)
+    {
+        isProcessing = true;
+        try
+        {
+            Marker.OpticianManage = newCode;
+            await OpticianMapClientService.UpdateOpticianManage(Marker); // 서버에 변경 요청
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "관리점 구분 변경 실패", ex);
+        }
+        finally
+        {
             isProcessing = false;
         }
     }

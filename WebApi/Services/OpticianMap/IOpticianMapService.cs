@@ -45,5 +45,7 @@ namespace WebApi.Services.OpticianMap
         Task<UnRegMarkerHistory> AddVisitHistoryAsync(UnRegMarkerHistory historyDto);
         
         Task<IEnumerable<UnRegMarkerHistory>> GetVisitHistoryById(string OpnSfTeamCode, string MgtNo);
+
+        Task UpdateOpticianStatus(StatusRequest statusRequest);
     }
 }

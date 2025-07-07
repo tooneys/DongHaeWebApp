@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using WebApi.Models;
 using WebApi.Services.Common;
 using WebApi.Services.OpticianMap;
@@ -283,6 +284,34 @@ namespace WebApi.Controllers
                 _logger.LogError(ex, "미등록 안경원 방문이력 정보 조회 중 오류 발생");
                 return StatusCode(500, new ApiErrorResponse(
                     "미등록 안경원 방문이력 정보 조회 중 오류가 발생했습니다.",
+                    "INTERNAL_ERROR",
+                    ex.Message));
+            }
+        }
+
+        [HttpPost("status_change")]
+        [ProducesResponseType(typeof(ApiResponse<List<UnRegMarkerHistory>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateLocalDataStatus(StatusRequest statusRequest)
+        {
+            try
+            {
+                _logger.LogInformation("안경원 상태 변경 시작: MgtNo={MgtNo}", statusRequest.MgtNo);
+
+                await _opticianMapService.UpdateOpticianStatus(statusRequest);
+
+                return Ok(new ApiResponse<string>
+                {
+                    Message = "안경원 관리상태가 성공적으로 변경되었습니다.",
+                    Data = "안경원 관리상태가 성공적으로 변경되었습니다."
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "안경원 상태 변경 중 오류 발생: {@StatusRequest}", statusRequest);
+                return StatusCode(500, new ApiErrorResponse(
+                    "안경사 상태 변경 중 오류가 발생했습니다.",
                     "INTERNAL_ERROR",
                     ex.Message));
             }

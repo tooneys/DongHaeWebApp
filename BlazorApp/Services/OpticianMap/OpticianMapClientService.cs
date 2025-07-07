@@ -16,6 +16,7 @@ namespace BlazorApp.Services.OpticianMap
         Task<bool> UpdateOpticianLocationAsync(int id, decimal geoX, decimal geoY);
         Task LogRegistrationRequestAsync(int opticianId, string opticianName);
         Task<List<MarkerData>> ConvertToMarkersAsync(List<OpticianMapDto> opticians, LocationData? userLocation = null);
+        Task UpdateOpticianManage(OpticianMapDto Marker);
     }
 
     public class OpticianMapClientService : IOpticianMapClientService
@@ -390,6 +391,39 @@ namespace BlazorApp.Services.OpticianMap
         private double ToRadians(double degrees)
         {
             return degrees * (Math.PI / 180);
+        }
+
+        public async Task UpdateOpticianManage(OpticianMapDto Marker)
+        {
+            try
+            {
+                _logger.LogInformation($"안경원 상태변경 시작: MgtNo={Marker.MgtNo}, BplcNm={Marker.BplcNm}");
+
+                var statusRequest = new
+                {
+                    OpnSfTeamCode = Marker.OpnSfTeamCode,
+                    MgtNo = Marker.MgtNo,
+                    OpticianManage = Marker.OpticianManage,
+                };
+
+                var response = await _httpClient.PostAsJsonAsync("api/opticianmap/status_change", statusRequest);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation($"안경원 상태변경 완료: MgtNo={Marker.MgtNo}");
+                }
+                else
+                {
+                    var errorMessage = await _apiResponseHandler.ExtractErrorMessageAsync(response);
+                    _logger.LogWarning($"안경원 상태변경 실패: MgtNo={Marker.MgtNo}, Error={errorMessage}");
+                        
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"안경원 상태변경 중 오류 발생: MgtNo={Marker.MgtNo}");
+                // 로그 저장 실패는 예외를 다시 던지지 않음 (비즈니스 로직에 영향 없음)
+            }
         }
     }
 }

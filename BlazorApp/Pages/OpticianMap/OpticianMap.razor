@@ -14,7 +14,7 @@
 @code {
     private ElementReference mapContainer;
     private DotNetObjectReference<OpticianMap>? _dotNetRef;
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -22,10 +22,10 @@
             try
             {
                 _dotNetRef = DotNetObjectReference.Create(this);
-                
+
                 // marker Data 가져오기
                 var markers = await OpticianMapService.GetOpticianMapAllAsync();
-                
+
                 // 지도 초기화
                 await JSRuntime.InvokeVoidAsync("naverMapUtils.initializeNaverMap", _dotNetRef, "map", markers);
             }
@@ -108,10 +108,22 @@
                 Position = DialogPosition.Center,
             };
 
-        await DialogService.ShowAsync<UnregisteredOpticianDialog>($"미등록된 안경원 - {marker.BplcNm}",
-        parameters,
-        options
-        );
+        var dialog = await DialogService.ShowAsync<UnregisteredOpticianDialog>($"미등록된 안경원 - {marker.BplcNm}",
+                parameters,
+                options
+                );
+
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is OpticianMapDto updatedMarker)
+        {
+            await JSRuntime.InvokeVoidAsync(
+                "naverMapUtils.updateMarkerColor",
+                updatedMarker.Id,
+                updatedMarker.IsReg,
+                updatedMarker.OpticianManage
+            );
+        }
     }
 
     public void Dispose() => _dotNetRef?.Dispose();
@@ -121,4 +133,11 @@
         _dotNetRef?.Dispose();
         await JSRuntime.InvokeVoidAsync("naver.maps.Event.clearInstanceListeners", mapContainer);
     }
+
+    string GetMarkerColor(string opticianManage) => opticianManage switch
+    {
+        "001" => "#29675b", // 신규관리점(파랑)
+        "002" => "#ff5252", // 관리제외점(주황)
+        _ => "#ff5252"      // 기타(회색)
+    };
 }

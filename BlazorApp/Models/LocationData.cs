@@ -20,6 +20,15 @@
         public string SiteTel { get; set; }
         public string CustCode { get; set; }
         public bool IsReg { get; set; }
+        public string OpticianManage { get; set; }
+
+        public string OpticianManageName =>
+            OpticianManage switch
+            {
+                "001" => "신규관리점",
+                "002" => "관리제외점",
+                _ => "미지정"
+            };
     }
 
     // 마커 데이터 모델

@@ -13,6 +13,7 @@
         public string SiteTel { get; set; }
         public string CustCode { get; set; }
         public bool IsReg { get; set; }
+        public string OpticianManage { get; set; }
     }
 
     public class UnRegMarkerHistory
@@ -24,5 +25,12 @@
         public string TX_REASON { get; set; }
         public string TX_PURPOSE { get; set; }
         public string TX_NOTE { get; set; }
+    }
+
+    public class StatusRequest
+    {
+        public string OpnSfTeamCode { get; set; }
+        public string MgtNo { get; set; }
+        public string OpticianManage { get; set; }
     }
 }

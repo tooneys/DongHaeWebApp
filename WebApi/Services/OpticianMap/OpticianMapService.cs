@@ -225,5 +225,33 @@ namespace WebApi.Services.OpticianMap
                 throw;
             }
         }
+
+        public async Task UpdateOpticianStatus(StatusRequest statusRequest)
+        {
+            try
+            {
+                _logger.LogInformation($"안경원 상태 변경 시작: MgtNo={statusRequest.MgtNo}");
+
+                using var connection = _connectionFactory.CreateConnection();
+
+                var parameters = new DynamicParameters();
+                parameters.Add("@OpnSfTeamCode", statusRequest.OpnSfTeamCode);
+                parameters.Add("@MgtNo", statusRequest.MgtNo);
+                parameters.Add("@CD_STATUS", statusRequest.OpticianManage);
+
+                await connection.ExecuteAsync(
+                    "UpdateLocalDataStatus", // localData 안경원 관리상태 변경 SP
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+
+                _logger.LogInformation($"안경원 상태 변경 완료: OpnSfTeamCode={statusRequest.OpnSfTeamCode}, MgtNo={statusRequest.MgtNo}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"안경원 상태 변경 중 오류 발생: {statusRequest.MgtNo}");
+                throw;
+            }
+        }
     }
 }
