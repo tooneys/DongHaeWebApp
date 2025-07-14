@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebApi.DTOs;
 using WebApi.Models;
 using WebApi.Services.Common;
 using WebApi.Services.PartnerCard;
@@ -452,39 +453,35 @@ namespace WebApi.Controllers
         [ProducesResponseType(typeof(ApiResponse<OpticianPromotion>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> AddPromotion(
-            [FromForm] string RegDate,
-            [FromForm] string OpticianId,
-            [FromForm] string Promotion,
-            [FromForm] IFormFile ImageFile)
+        public async Task<IActionResult> AddPromotion([FromForm] PartnerCardInsertDTOs dto)
         {
             try
             {
                 // 1. 기본 유효성 검증
-                var opticianValidation = ValidateOpticianId(OpticianId);
+                var opticianValidation = ValidateOpticianId(dto.OpticianId);
                 if (opticianValidation != null)
                     return opticianValidation;
 
-                var promotionValidation = ValidatePromotionData(RegDate, Promotion, ImageFile);
+                var promotionValidation = ValidatePromotionData(dto.RegDate, dto.Promotion, dto.ImageFile);
                 if (promotionValidation != null)
                     return promotionValidation;
 
-                _logger.LogInformation($"판촉물 추가 시작: OpticianId={OpticianId}, Promotion={Promotion}");
+                _logger.LogInformation($"판촉물 추가 시작: OpticianId={dto.OpticianId}, Promotion={dto.Promotion}");
                 
                 // 2. 이미지 처리
                 string imageUrl = null;
-                if (ImageFile != null && ImageFile.Length > 0)
+                if (dto.ImageFile != null && dto.ImageFile.Length > 0)
                 {
-                    var (url, _) = await _imageService.ProcessImageAsync(ImageFile);
+                    var (url, _) = await _imageService.ProcessImageAsync(dto.ImageFile);
                     imageUrl = url;
                 }
                 
                 // 3. 판촉물 데이터 생성
                 var newPromotion = new OpticianPromotion
                 {
-                    CustCode = OpticianId,
-                    RegDate = DateTime.TryParse(RegDate, out DateTime date) ? date : DateTime.Now,
-                    Promotion = Promotion,
+                    CustCode = dto.OpticianId,
+                    RegDate = DateTime.TryParse(dto.RegDate, out DateTime date) ? date : DateTime.Now,
+                    Promotion = dto.Promotion,
                     ImageUrl = imageUrl
                 };
 
@@ -499,7 +496,7 @@ namespace WebApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"판촉물 추가 중 오류 발생 : OpticianId : {OpticianId}, Promotion : {Promotion}");
+                _logger.LogError(ex, $"판촉물 추가 중 오류 발생 : OpticianId : {dto.OpticianId}, Promotion : {dto.Promotion}");
                 return StatusCode(500, new ApiErrorResponse("판촉물 추가 중 오류가 발생했습니다.", "INTERNAL_ERROR", ex.Message));
             }
         }

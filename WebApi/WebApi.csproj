@@ -34,6 +34,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="wwwroot\uploads\covers\" />
+    <Folder Include="wwwroot\uploads\downloads\" />
     <Folder Include="wwwroot\uploads\promotions\" />
   </ItemGroup>
 

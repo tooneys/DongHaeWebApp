@@ -4,6 +4,8 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WebApi.Infrastructure;
+using WebApi.Repositories;
+using WebApi.Services;
 using WebApi.Services.Auth;
 using WebApi.Services.Common;
 using WebApi.Services.OpticianMap;
@@ -13,8 +15,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 try
 {
-
     builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
+
+    // 마케팅 데이터 서비스 및 리포지토리 등록
+    builder.Services.AddScoped<IMarketingDataRepository, MarketingDataRepository>();
+    builder.Services.AddScoped<IFileUploadService, FileUploadService>();
 
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<ICommonService, CommonService>();
@@ -70,7 +75,7 @@ try
     // 파일 업로드 크기 제한 설정
     builder.Services.Configure<FormOptions>(options =>
     {
-        options.MultipartBodyLengthLimit = 10 * 1024 * 1024;
+        options.MultipartBodyLengthLimit = 100 * 1024 * 1024;
     });
 
     var app = builder.Build();
