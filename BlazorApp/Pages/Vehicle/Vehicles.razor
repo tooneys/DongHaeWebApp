@@ -34,7 +34,6 @@
                             </CellTemplate>
                         </PropertyColumn>
 
-                        <PropertyColumn Property="x => x.CD_EMP" Title="사원코드" />
                         <PropertyColumn Property="x => x.NO_CAR" Title="차량번호" />
                         <PropertyColumn Property="x => x.TX_AREA" Title="운행지역" />
 
@@ -58,9 +57,9 @@
                             </CellTemplate>
                         </PropertyColumn>
 
-                        <PropertyColumn Property="x => x.VL_FUEL" Title="연료량" Sortable="true">
+                        <PropertyColumn Property="x => x.VL_FUEL" Title="유류비" Sortable="true">
                             <CellTemplate>
-                                <MudText>@context.Item.VL_FUEL.ToString("N1") L</MudText>
+                                <MudText>@context.Item.VL_FUEL.ToString("N0")</MudText>
                             </CellTemplate>
                         </PropertyColumn>
 
@@ -195,7 +194,7 @@
                 VL_BEFORE = 10000m,
                 VL_AFTER = 10150m,
                 VL_DISTANCE = 150m,
-                VL_FUEL = 15.5m
+                VL_FUEL = 70000m
             },
             new Vehicle
             {
@@ -207,7 +206,7 @@
                 VL_BEFORE = 20000m,
                 VL_AFTER = 20080m,
                 VL_DISTANCE = 80m,
-                VL_FUEL = 8.2m
+                VL_FUEL = 50000m
             }
         };
     }
