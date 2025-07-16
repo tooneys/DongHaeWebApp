@@ -1,0 +1,54 @@
+﻿@inject AuthenticationStateProvider AuthenticationStateProvider
+@implements IDisposable
+
+<MudPaper Class="pa-6 mt-2 mb-2 d-flex align-center justify-between"
+          Style="background: linear-gradient(90deg, #6a82fb 0%, #fc5c7d 100%); border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.07);"
+          Elevation="2">
+    <div class="d-flex align-center">
+        <MudAvatar Size="Size.Large" Color="Color.Primary" Class="mr-4" Style="background: rgba(255,255,255,0.2);">
+            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Color="Color.Surface" Size="Size.Large"></MudIcon>
+        </MudAvatar>
+        <div>
+            <MudText Typo="Typo.h5" Class="font-weight-bold text-white" GutterBottom="true" Style="letter-spacing:1px;">
+                안녕하세요, @_userName 님!
+            </MudText>
+            <MudText Typo="Typo.subtitle1" Class="text-white" Style="opacity:0.85;">
+                오늘의 매출 현황을 확인해보세요.<br />
+            </MudText>
+        </div>
+    </div>
+</MudPaper>
+
+@code {
+    private string _userName = "";
+    private string _currentDateTime = "";
+    private Timer? _timeUpdateTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _userName = authState.User.Identity?.Name ?? "사용자";
+
+        UpdateDateTime();
+        SetupTimeUpdateTimer();
+    }
+
+    private void UpdateDateTime()
+    {
+        _currentDateTime = DateTime.Now.ToString("yyyy년 MM월 dd일 dddd HH:mm");
+    }
+
+    private void SetupTimeUpdateTimer()
+    {
+        _timeUpdateTimer = new Timer(_ =>
+        {
+            UpdateDateTime();
+            InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+    }
+
+    public void Dispose()
+    {
+        _timeUpdateTimer?.Dispose();
+    }
+}

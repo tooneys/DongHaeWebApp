@@ -76,5 +76,23 @@ namespace WebApi.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        [HttpGet("itemgroup")]
+        public async Task<ActionResult<List<ItemGroupSalesDto>>> GetItemGroupSales(
+            [FromQuery] string userId = "",
+            CancellationToken cancellationToken = default
+        )
+        {
+            try
+            {
+                var result = await _salesService.GetItemGroupSalesAsync(userId, cancellationToken);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting current month sales");
+                return StatusCode(500, "Internal server error");
+            }
+        }
     }
 }

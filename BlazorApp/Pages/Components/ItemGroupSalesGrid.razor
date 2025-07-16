@@ -3,7 +3,7 @@
 <MudCard>
     <MudCardHeader>
         <CardHeaderContent>
-            <MudText Typo="Typo.h6">매출 하락 안경원 현황</MudText>
+            <MudText Typo="Typo.h6">품목별 매출 비율</MudText>
         </CardHeaderContent>
         <CardHeaderActions>
             <MudButton Variant="Variant.Outlined" 
@@ -15,7 +15,7 @@
             </MudButton>
         </CardHeaderActions>
     </MudCardHeader>
-    <MudCardContent Class="pa-0" Style="height: 100%; display: flex; flex-direction: column;">
+    <MudCardContent Class="pa-0">
         @if (isLoading)
         {
             <!-- 프로그레스 로딩 -->
@@ -28,51 +28,38 @@
         }
         else if (salesData?.Any() == true)
         {
-            <MudTable Items="@salesData" Hover="true" Breakpoint="Breakpoint.Sm" FixedHeader="true" Height="680px">
+            <MudTable Items="@salesData" Hover="true" Breakpoint="Breakpoint.Sm" Height="680px">
                 <HeaderContent>
-                    <MudTh Style="width: 80px; text-align: center;">순위</MudTh>
-                    <MudTh>안경원명</MudTh>
-                    <MudTh Style="width: 150px; text-align: right;">전년평균매출</MudTh>
-                    <MudTh Style="width: 150px; text-align: right;">전월매출</MudTh>
-                    <MudTh Style="width: 150px; text-align: right;">당월매출</MudTh>
-                    <MudTh Style="width: 150px; text-align: right;">차이</MudTh>
+                    <MudTh Style="width: 80px; text-align: center;">품목군</MudTh>
+                    <MudTh Style="width: 80px; text-align: right;">수량(짝)</MudTh>
+                    <MudTh Style="width: 80px; text-align: right;">수량(비율)</MudTh>
+                    <MudTh Style="width: 100px; text-align: right;">금액(원)</MudTh>
+                    <MudTh Style="width: 100px; text-align: right;">금액(비율)</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd Style="text-align: center;">
-                        @if (context.Rank <= 3)
-                        {
-                            <MudChip T="int" Color="@GetRankChipColor(context.Rank)" Size="Size.Small">
-                                @context.Rank
-                            </MudChip>
-                        }
-                        else
-                        {
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">@context.Rank</MudText>
-                        }
-                    </MudTd>
-                    <MudTd>
                         <MudText Typo="Typo.body1">
-                            <strong>@context.StoreName</strong>
+                            <strong>@context.GroupName</strong>
                         </MudText>
                     </MudTd>
                     <MudTd Style="text-align: right;">
                         <MudText Typo="Typo.body1">
-                            <strong>@context.PreyearAvgSales.ToString("N0")</strong>
+                            <strong>@context.Qty.ToString("N0")</strong>
                         </MudText>
                     </MudTd>
                     <MudTd Style="text-align: right;">
                         <MudText Typo="Typo.body1">
-                            <strong>@context.PremonthSumSales.ToString("N0")</strong>
+                            <strong>@context.QtyRatio.ToString("N2") %</strong>
                         </MudText>
                     </MudTd>
                     <MudTd Style="text-align: right;">
                         <MudText Typo="Typo.body1">
-                            <strong>@context.MonthSumSales.ToString("N0")</strong>
+                            <strong>@context.Amount.ToString("N0")</strong>
                         </MudText>
                     </MudTd>
                     <MudTd Style="text-align: right;">
-                        <MudText Typo="Typo.body1" Color="@(context.DiffAmount < 0 ? Color.Error : Color.Primary)">
-                            <strong>@context.DiffAmount.ToString("N0")</strong>
+                        <MudText Typo="Typo.body1">
+                            <strong>@context.AmountRatio.ToString("N2") %</strong>
                         </MudText>
                     </MudTd>
                 </RowTemplate>
@@ -88,7 +75,7 @@
 </MudCard>
 
 @code {
-    private List<OpticalStoreSalesDecline>? salesData;
+    private List<ItemGroupSales>? salesData;
     private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
@@ -103,15 +90,14 @@
         
         try
         {
-            var allSales = await SalesService.GetAllStoresSalesDeclineAsync();
-            salesData = allSales.Select((store, index) => new OpticalStoreSalesDecline
+            var allSales = await SalesService.GetAllItemGroupSalesAsync();
+            salesData = allSales.Select((store, index) => new ItemGroupSales
                                {
-                                   StoreName = store.StoreName,
-                                   PreyearAvgSales = store.PreyearAvgSales,
-                                   PremonthSumSales = store.PremonthSumSales,
-                                   MonthSumSales = store.MonthSumSales,
-                                   DiffAmount = store.DiffAmount,
-                                   Rank = store.Rank,
+                                    GroupName = store.GroupName,
+                                    Qty = store.Qty,
+                                    QtyRatio = store.QtyRatio,
+                                    Amount = store.Amount,
+                                    AmountRatio = store.AmountRatio,
                                })
                                .ToList();
         }
@@ -130,12 +116,4 @@
     {
         await LoadDataAsync();
     }
-
-    private Color GetRankChipColor(int rank) => rank switch
-    {
-        1 => Color.Warning,
-        2 => Color.Secondary,
-        3 => Color.Info,
-        _ => Color.Default
-    };
 }

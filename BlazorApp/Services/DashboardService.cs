@@ -42,5 +42,14 @@ namespace BlazorApp.Services
             var response = await _httpClient.GetFromJsonAsync<List<OpticalStoreSalesDecline>>($"api/dashboard/sales/decline?userId={userId}");
             return response ?? new List<OpticalStoreSalesDecline>();
         }
+
+        public async Task<List<ItemGroupSales>> GetAllItemGroupSalesAsync()
+        {
+            var userProfile = await _localStorage.GetItemAsync<UserProfile>("userProfile");
+            var userId = userProfile!.IsAdmin ? "" : userProfile.UserId;
+
+            var response = await _httpClient.GetFromJsonAsync<List<ItemGroupSales>>($"api/dashboard/sales/itemgroup?userId={userId}");
+            return response ?? new List<ItemGroupSales>();
+        }
     }
 }

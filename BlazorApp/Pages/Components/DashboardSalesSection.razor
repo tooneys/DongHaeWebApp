@@ -1,0 +1,83 @@
+﻿@implements IDashboardSection
+@implements IDisposable
+
+<MudPaper Class="pa-0" Elevation="3" Style="height: 100%; border-radius: 12px; overflow: hidden;">
+    <div style="height: 100%; display: flex; flex-direction: column;">
+        <!-- 섹션 헤더 -->
+        <div class="section-header">
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="pa-4">
+                <MudAvatar Color="Color.Primary" Size="Size.Small">
+                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp" />
+                </MudAvatar>
+                <MudText Typo="Typo.h6" Class="font-weight-bold text-primary">
+                    매출 현황
+                </MudText>
+                @if (IsLoading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="ml-2" />
+                }
+            </MudStack>
+            <MudDivider />
+        </div>
+
+        <!-- 컨텐츠 영역 -->
+        @if (IsLoading && _dashboardSales == null)
+        {
+            <div class="d-flex justify-center align-center" style="height: 400px;">
+                <MudProgressCircular Size="Size.Large" Indeterminate="true" />
+            </div>
+        }
+        else
+        {
+            <DashboardSales @ref="_dashboardSales" />
+        }
+    </div>
+</MudPaper>
+
+@code {
+    private DashboardSales? _dashboardSales;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    public bool IsLoading { get; private set; } = false;
+
+    public async Task RefreshAsync(CancellationToken cancellationToken = default)
+    {
+        if (IsLoading) return;
+
+        IsLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            using var combinedCts = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken, _cancellationTokenSource.Token);
+
+            if (_dashboardSales != null)
+            {
+                await _dashboardSales.RefreshAllAsync();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // 취소된 경우 무시
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
+    }
+}
+
+<style>
+    .section-header {
+        background: linear-gradient(45deg, #f8f9ff 0%, #e6f3ff 100%);
+        border-bottom: 1px solid #e0e7ff;
+    }
+</style>

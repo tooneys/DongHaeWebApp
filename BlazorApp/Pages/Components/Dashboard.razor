@@ -1,16 +1,65 @@
-﻿
-<MudGrid GutterSize="24px" Style="height: 100%;">
-    <MudItem xs="12" md="4">
-        <DashboardSales />
-    </MudItem>
-    <MudItem xs="12" md="4">
-        <SalesDeclineGrid />
-    </MudItem>
-    <MudItem xs="12" md="4">
-        <MudPaper> Item 3 </MudPaper>
-    </MudItem>
-</MudGrid>
+﻿@implements IDisposable
+@inject DashboardService DashboardService
+@inject IJSRuntime JSRuntime
+
+<MudStack Spacing="2" Class="h-100">
+    <!-- 대시보드 헤더 -->
+    <DashboardHeader />
+
+    <!-- 메인 대시보드 그리드 -->
+    <MudPaper Class="pa-2" Elevation="2" Style="border-radius: 16px; height: calc(100vh - 230px)">
+        <MudGrid Spacing="3">
+            <!-- 매출 섹션 -->
+            <MudItem xs="12" lg="3">
+                <DashboardSalesSection @ref="_salesSection" />
+            </MudItem>
+
+            <!-- 매출 하락 현황 섹션 -->
+            <MudItem xs="12" lg="5">
+                <DashboardDeclineSection @ref="_declineSection" />
+            </MudItem>
+
+            <!-- 품목별 매출 섹션 -->
+            <MudItem xs="12" lg="4">
+                <DashboardItemSection @ref="_itemSection" />
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudStack>
 
 @code {
+    private DashboardSalesSection? _salesSection;
+    private DashboardDeclineSection? _declineSection;
+    private DashboardItemSection? _itemSection;
+    private bool _isLoading = false;
+    private Timer? _autoRefreshTimer;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
 
+    // 성능 최적화: 컴포넌트 참조 캐싱
+    private readonly List<IDashboardSection> _sections = new();
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // 초기 렌더링 후 섹션 참조 캐싱
+            CacheSectionReferences();
+        }
+    }
+
+    private void CacheSectionReferences()
+    {
+        _sections.Clear();
+        if (_salesSection != null) _sections.Add(_salesSection);
+        if (_declineSection != null) _sections.Add(_declineSection);
+        if (_itemSection != null) _sections.Add(_itemSection);
+    }
+
+    public void Dispose()
+    {
+        _autoRefreshTimer?.Dispose();
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
+    }
 }

@@ -88,5 +88,30 @@ namespace WebApi.Services.Dashboard
                 throw;
             }
         }
+
+        public async Task<List<ItemGroupSalesDto>> GetItemGroupSalesAsync(string userId, CancellationToken cancellationToken = default)
+        {
+
+            try
+            {
+                using var connection = _connectionFactory.CreateConnection();
+
+                var parameters = new DynamicParameters();
+                parameters.Add("@UserId", userId, DbType.String);
+
+                var result = await connection.QueryAsync<ItemGroupSalesDto>(
+                    "GetItemGroupSales",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+
+                return result.ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting item group sales");
+                throw;
+            }
+        }
     }
 }
