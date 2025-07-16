@@ -89,6 +89,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>
 builder.Services.AddScoped<ICommonClientService, CommonClientService>();
 builder.Services.AddScoped<IPartnerCardClientService, PartnerCardClientService>();
 builder.Services.AddScoped<IOpticianMapClientService, OpticianMapClientService>();
+builder.Services.AddScoped<DashboardService>();     //DashBoard 서비스
 
 // MudBlazor 설정 최적화
 builder.Services.AddMudServices(config =>

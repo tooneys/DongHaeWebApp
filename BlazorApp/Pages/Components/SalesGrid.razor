@@ -1,0 +1,143 @@
+﻿@inject DashboardService SalesService
+
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">당월 안경원별 매출 순위</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudButton Variant="Variant.Outlined" 
+                      StartIcon="@Icons.Material.Filled.Refresh"
+                      OnClick="RefreshAsync"
+                      Disabled="isLoading"
+                      Size="Size.Small">
+                새로고침
+            </MudButton>
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent Class="pa-0">
+        @if (isLoading)
+        {
+            <!-- 프로그레스 로딩 -->
+            <div style="height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <MudProgressCircular Size="Size.Large" Color="Color.Primary" Indeterminate="true" />
+                <MudText Typo="Typo.body1" Class="mt-4" Color="Color.Secondary">
+                    매출 데이터를 불러오는 중입니다...
+                </MudText>
+            </div>
+        }
+        else if (salesData?.Any() == true)
+        {
+            <MudTable Items="@salesData" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true" Height="100%">
+                <HeaderContent>
+                    <MudTh Style="width: 80px; text-align: center;">순위</MudTh>
+                    <MudTh>안경원명</MudTh>
+                    <MudTh Style="width: 150px; text-align: right;">매출액</MudTh>
+                    <MudTh Style="width: 100px; text-align: center;">상태</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd Style="text-align: center;">
+                        @if (context.Rank <= 3)
+                        {
+                            <MudChip T="int" Color="@GetRankChipColor(context.Rank)" Size="Size.Small">
+                                @context.Rank
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@context.Rank</MudText>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        <MudText Typo="Typo.body1">
+                            <strong>@context.StoreName</strong>
+                        </MudText>
+                    </MudTd>
+                    <MudTd Style="text-align: right;">
+                        <MudText Typo="Typo.body1">
+                            <strong>@context.FormattedSalesAmount</strong>
+                        </MudText>
+                    </MudTd>
+                    <MudTd Style="text-align: center;">
+                        <MudChip T="decimal" Color="@GetStatusChipColor(context.SalesAmount)" Size="Size.Small">
+                            @GetStatusText(context.SalesAmount)
+                        </MudChip>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" Class="ma-4">
+                표시할 데이터가 없습니다.
+            </MudAlert>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    private List<OpticalStoreSales>? salesData;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        isLoading = true;
+        StateHasChanged();
+        
+        try
+        {
+            var allSales = await SalesService.GetAllStoresSalesAsync();
+            salesData = allSales.OrderByDescending(x => x.SalesAmount)
+                               .Select((store, index) => new OpticalStoreSales
+                               {
+                                   StoreName = store.StoreName,
+                                   SalesAmount = store.SalesAmount,
+                                   Rank = store.Rank,
+                               })
+                               .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading sales data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private Color GetRankChipColor(int rank) => rank switch
+    {
+        1 => Color.Warning,
+        2 => Color.Secondary,
+        3 => Color.Info,
+        _ => Color.Default
+    };
+
+    private Color GetStatusChipColor(decimal salesAmount) => salesAmount switch
+    {
+        >= 10000000 => Color.Success,
+        >= 5000000 => Color.Primary,
+        >= 1000000 => Color.Warning,
+        _ => Color.Secondary
+    };
+
+    private string GetStatusText(decimal salesAmount) => salesAmount switch
+    {
+        >= 10000000 => "우수",
+        >= 5000000 => "양호",
+        >= 1000000 => "보통",
+        _ => "저조"
+    };
+}

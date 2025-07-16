@@ -1,0 +1,39 @@
+﻿
+<MudGrid AlignItems="Center">
+    <!-- 차트 섹션 -->
+    <MudItem xs="12" Class="mb-4">
+        <MudPaper Class="pa-0" Elevation="3">
+            <SalesChart @ref="salesChart" />
+        </MudPaper>
+    </MudItem>
+
+    <!-- 구분선 -->
+    <MudItem xs="12" Class="my-2">
+        <MudDivider />
+    </MudItem>
+
+    <!-- 그리드 섹션 -->
+    <MudItem xs="12">
+        <MudPaper Class="pa-0" Elevation="3" >
+            <SalesGrid @ref="salesGrid" />
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+@code {
+
+    private SalesChart? salesChart;
+    private SalesGrid? salesGrid;
+
+    private async Task RefreshAllAsync()
+    {
+        var tasks = new List<Task>();
+
+        if (salesChart != null)
+            tasks.Add(salesChart.RefreshAsync());
+
+        if (salesGrid != null)
+            tasks.Add(salesGrid.RefreshAsync());
+
+        await Task.WhenAll(tasks);
+    }
+}

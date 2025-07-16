@@ -5,24 +5,26 @@
 
 <AuthorizeView>
     <Authorized>
-        <MudPaper Class="pa-6 mt-4 mb-4 d-flex align-center justify-between"
-                  Style="background: linear-gradient(90deg, #6a82fb 0%, #fc5c7d 100%); border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.07);"
-                  Elevation="2">
-            <div class="d-flex align-center">
-                <MudAvatar Size="Size.Large" Color="Color.Primary" Class="mr-4">
-                    <MudIcon Icon="@Icons.Material.Filled.Person"></MudIcon>
-                </MudAvatar>
-                <div>
-                    <MudText Typo="Typo.h4" Class="font-weight-bold text-white" GutterBottom="true" Style="letter-spacing:1px;">
-                        환영합니다, @(context.User.Identity!.Name) 님!
-                    </MudText>
-                    <MudText Typo="Typo.subtitle1" Class="text-white" Style="opacity:0.85;">
-                        오늘도 멋진 하루가 되시길 바랍니다.<br/>
-                    </MudText>
+        <div style="height: 100vh; overflow: hidden">
+            <MudPaper Class="pa-6 mt-4 mb-4 d-flex align-center justify-between"
+                      Style="background: linear-gradient(90deg, #6a82fb 0%, #fc5c7d 100%); border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.07);"
+                      Elevation="2">
+                <div class="d-flex align-center">
+                    <MudAvatar Size="Size.Large" Color="Color.Primary" Class="mr-4">
+                        <MudIcon Icon="@Icons.Material.Filled.Person"></MudIcon>
+                    </MudAvatar>
+                    <div>
+                        <MudText Typo="Typo.h4" Class="font-weight-bold text-white" GutterBottom="true" Style="letter-spacing:1px;">
+                            환영합니다, @(context.User.Identity!.Name) 님!
+                        </MudText>
+                        <MudText Typo="Typo.subtitle1" Class="text-white" Style="opacity:0.85;">
+                            오늘도 멋진 하루가 되시길 바랍니다.<br/>
+                        </MudText>
+                    </div>
                 </div>
-            </div>
-        </MudPaper>
-        <Dashboard />
+            </MudPaper>
+            <Dashboard />
+        </div>
     </Authorized>
     <NotAuthorized>
         <MudPaper Class="pa-6 mt-4 mb-6 d-flex align-center justify-center"

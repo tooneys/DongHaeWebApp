@@ -8,6 +8,7 @@ using WebApi.Repositories;
 using WebApi.Services;
 using WebApi.Services.Auth;
 using WebApi.Services.Common;
+using WebApi.Services.Dashboard;
 using WebApi.Services.OpticianMap;
 using WebApi.Services.PartnerCard;
 
@@ -26,6 +27,7 @@ try
     builder.Services.AddScoped<IImageService, ImageService>();
     builder.Services.AddScoped<IPartnerCardService, PartnerCardService>();
     builder.Services.AddScoped<IOpticianMapService, OpticianMapService>();
+    builder.Services.AddScoped<IDashboardSalesService, DashboardSalesService>();
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

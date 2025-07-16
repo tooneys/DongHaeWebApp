@@ -1,0 +1,103 @@
+﻿@inject DashboardService SalesService
+
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">당월 안경원별 매출 현황 (상위 10개)</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+            Color="Color.Default"
+            OnClick="RefreshAsync"
+            Disabled="isLoading" />
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (isLoading)
+        {
+            <!-- 프로그레스 로딩 -->
+            <div style="height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <MudProgressCircular Size="Size.Large" Color="Color.Primary" Indeterminate="true" />
+                <MudText Typo="Typo.body1" Class="mt-4" Color="Color.Secondary">
+                    매출 데이터를 불러오는 중입니다...
+                </MudText>
+            </div>
+        }
+        else if (salesData?.Any() == true)
+        {
+            <MudChart ChartType="ChartType.Bar"
+            ChartSeries="@Series"
+            XAxisLabels="@XAxisLabels"
+            Width="100%" Height="50%"
+            ChartOptions="@Options"
+            AxisChartOptions="_axisChartOptions"
+            />
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info">
+                표시할 데이터가 없습니다.
+            </MudAlert>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    private List<OpticalStoreSales>? salesData;
+    private bool isLoading = true;
+
+    public List<ChartSeries> Series = new();
+    public string[] XAxisLabels = Array.Empty<string>();
+    private ChartOptions Options = new();
+    private AxisChartOptions _axisChartOptions = new AxisChartOptions();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Options.YAxisTicks = 100000;
+        Options.YAxisFormat = "N0";
+        Options.ValueFormatString = "N0"; // 숫자 포맷 설정
+
+        _axisChartOptions.XAxisLabelRotation = 50;
+        
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            salesData = await SalesService.GetTopStoresSalesAsync(10);
+
+            if (salesData?.Any() == true)
+            {
+                XAxisLabels = salesData.Select(x => x.StoreName).ToArray();
+                Series = new List<ChartSeries>
+                {
+                    new ChartSeries
+                    {
+                        Name = "매출액",
+                        // Math.Round로 정밀도 제한 후 변환
+                        Data = salesData.Select(x => (double)Math.Round(x.SalesAmount, 0)).ToArray()
+                    }
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading sales data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadDataAsync();
+    }
+}

@@ -1,0 +1,143 @@
+﻿@inject DashboardService SalesService
+
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">매출 하락 안경원 현황</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudButton Variant="Variant.Outlined" 
+                      StartIcon="@Icons.Material.Filled.Refresh"
+                      OnClick="RefreshAsync"
+                      Disabled="isLoading"
+                      Size="Size.Small">
+                새로고침
+            </MudButton>
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent Class="pa-0" Style="height: 100%; display: flex; flex-direction: column;">
+        @if (isLoading)
+        {
+            <!-- 프로그레스 로딩 -->
+            <div style="height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <MudProgressCircular Size="Size.Large" Color="Color.Primary" Indeterminate="true" />
+                <MudText Typo="Typo.body1" Class="mt-4" Color="Color.Secondary">
+                    매출 데이터를 불러오는 중입니다...
+                </MudText>
+            </div>
+        }
+        else if (salesData?.Any() == true)
+        {
+            <div style="flex: 1; overflow: hidden;">
+                <MudTable Items="@salesData" Hover="true" Breakpoint="Breakpoint.Sm" Virtualize="true" FixedHeader="true">
+                    <HeaderContent>
+                        <MudTh Style="width: 80px; text-align: center;">순위</MudTh>
+                        <MudTh>안경원명</MudTh>
+                        <MudTh Style="width: 150px; text-align: right;">전년평균매출</MudTh>
+                        <MudTh Style="width: 150px; text-align: right;">전월매출</MudTh>
+                        <MudTh Style="width: 150px; text-align: right;">당월매출</MudTh>
+                        <MudTh Style="width: 150px; text-align: right;">차이</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd Style="text-align: center;">
+                            @if (context.Rank <= 3)
+                            {
+                                <MudChip T="int" Color="@GetRankChipColor(context.Rank)" Size="Size.Small">
+                                    @context.Rank
+                                </MudChip>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">@context.Rank</MudText>
+                            }
+                        </MudTd>
+                        <MudTd>
+                            <MudText Typo="Typo.body1">
+                                <strong>@context.StoreName</strong>
+                            </MudText>
+                        </MudTd>
+                        <MudTd Style="text-align: right;">
+                            <MudText Typo="Typo.body1">
+                                <strong>@context.PreyearAvgSales.ToString("N0")</strong>
+                            </MudText>
+                        </MudTd>
+                        <MudTd Style="text-align: right;">
+                            <MudText Typo="Typo.body1">
+                                <strong>@context.PremonthSumSales.ToString("N0")</strong>
+                            </MudText>
+                        </MudTd>
+                        <MudTd Style="text-align: right;">
+                            <MudText Typo="Typo.body1">
+                                <strong>@context.MonthSumSales.ToString("N0")</strong>
+                            </MudText>
+                        </MudTd>
+                        <MudTd Style="text-align: right;">
+                            <MudText Typo="Typo.body1" Color="@(context.DiffAmount < 0 ? Color.Error : Color.Primary)">
+                                <strong>@context.DiffAmount.ToString("N0")</strong>
+                            </MudText>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </div>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" Class="ma-4">
+                표시할 데이터가 없습니다.
+            </MudAlert>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    private List<OpticalStoreSalesDecline>? salesData;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        isLoading = true;
+        StateHasChanged();
+        
+        try
+        {
+            var allSales = await SalesService.GetAllStoresSalesDeclineAsync();
+            salesData = allSales.Select((store, index) => new OpticalStoreSalesDecline
+                               {
+                                   StoreName = store.StoreName,
+                                   PreyearAvgSales = store.PreyearAvgSales,
+                                   PremonthSumSales = store.PremonthSumSales,
+                                   MonthSumSales = store.MonthSumSales,
+                                   DiffAmount = store.DiffAmount,
+                                   Rank = store.Rank,
+                               })
+                               .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading sales data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private Color GetRankChipColor(int rank) => rank switch
+    {
+        1 => Color.Warning,
+        2 => Color.Secondary,
+        3 => Color.Info,
+        _ => Color.Default
+    };
+}
