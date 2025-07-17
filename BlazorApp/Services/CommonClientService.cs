@@ -12,6 +12,7 @@ namespace BlazorApp.Services.Common
         Task<Optician?> GetOpticianByIdAsync(string opticianId);
         Task<List<CodeDto>> GetCodeListAsync(string codeType);
         Task<List<RegionDto>> GetRegionsAsync();
+        Task<List<EmployeeDto>> GetSaleEmployeeAsync();
     }
 
     public class CommonClientService : ICommonClientService
@@ -200,6 +201,33 @@ namespace BlazorApp.Services.Common
             catch (Exception ex)
             {
                 _logger.LogError(ex, "지역 목록 조회 중 오류 발생");
+                throw;
+            }
+        }
+
+        public async Task<List<EmployeeDto>> GetSaleEmployeeAsync()
+        {
+            try
+            {
+                _logger.LogInformation("영업사원 목록 조회 시작");
+
+                var response = await _httpClient.GetAsync("api/common/salesemp");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var apiResponse = await _apiResponseHandler.HandleResponseAsync<List<EmployeeDto>>(response);
+                    var result = apiResponse?.Data ?? new List<EmployeeDto>();
+
+                    _logger.LogInformation("영업사원 목록 조회 완료: Count={Count}", result.Count);
+                    return result;
+                }
+
+                var errorMessage = await _apiResponseHandler.ExtractErrorMessageAsync(response);
+                throw new HttpRequestException($"영업사원 목록 조회 실패: {errorMessage}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "영업사원 목록 조회 중 오류 발생");
                 throw;
             }
         }

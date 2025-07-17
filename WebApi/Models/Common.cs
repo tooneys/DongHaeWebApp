@@ -36,4 +36,10 @@
         public int Level { get; set; }
         public bool IsActive { get; set; } = true;
     }
+
+    public class EmplyeeDto
+    {
+        public string EmpCode { get; set; } = string.Empty;
+        public string EmpName { get; set; } = string.Empty;
+    }
 }

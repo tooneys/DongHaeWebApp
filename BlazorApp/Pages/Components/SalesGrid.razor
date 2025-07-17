@@ -19,7 +19,7 @@
         @if (isLoading)
         {
             <!-- 프로그레스 로딩 -->
-            <div style="height: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div style="height: 270px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                 <MudProgressCircular Size="Size.Large" Color="Color.Primary" Indeterminate="true" />
                 <MudText Typo="Typo.body1" Class="mt-4" Color="Color.Secondary">
                     매출 데이터를 불러오는 중입니다...
@@ -28,12 +28,12 @@
         }
         else if (salesData?.Any() == true)
         {
-            <MudTable Items="@salesData" Hover="true" Breakpoint="Breakpoint.Sm" FixedHeader="true" Height="250px">
+            <MudTable Items="@salesData" Hover="true" Breakpoint="Breakpoint.Sm" FixedHeader="true" Height="270px">
                 <HeaderContent>
                     <MudTh Style="width: 80px; text-align: center;">순위</MudTh>
                     <MudTh>안경원명</MudTh>
                     <MudTh Style="width: 150px; text-align: right;">매출액</MudTh>
-                    <MudTh Style="width: 100px; text-align: center;">상태</MudTh>
+                    @* <MudTh Style="width: 100px; text-align: center;">상태</MudTh> *@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd Style="text-align: center;">
@@ -58,11 +58,11 @@
                             <strong>@context.FormattedSalesAmount</strong>
                         </MudText>
                     </MudTd>
-                    <MudTd Style="text-align: center;">
-                        <MudChip T="decimal" Color="@GetStatusChipColor(context.SalesAmount)" Size="Size.Small">
-                            @GetStatusText(context.SalesAmount)
-                        </MudChip>
-                    </MudTd>
+                    @* <MudTd Style="text-align: center;"> *@
+                    @*     <MudChip T="decimal" Color="@GetStatusChipColor(context.SalesAmount)" Size="Size.Small"> *@
+                    @*         @GetStatusText(context.SalesAmount) *@
+                    @*     </MudChip> *@
+                    @* </MudTd> *@
                 </RowTemplate>
             </MudTable>
         }

@@ -1,10 +1,14 @@
 ﻿@inject AuthenticationStateProvider AuthenticationStateProvider
 @implements IDisposable
+@inject ICommonClientService commonClientService
+@inject ILocalStorageService localStorageService
 
-<MudPaper Class="pa-6 mt-2 mb-2 d-flex align-center justify-between"
-          Style="background: linear-gradient(90deg, #6a82fb 0%, #fc5c7d 100%); border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.07);"
-          Elevation="2">
-    <div class="d-flex align-center">
+<MudPaper Class="pa-6 d-flex align-items-center justify-content-between"
+Style="background: linear-gradient(90deg, #6a82fb 0%, #fc5c7d 100%); border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.07);"
+Elevation="2">
+
+    @* 좌측: 아바타 + 환영 메시지 *@
+    <div class="d-flex">
         <MudAvatar Size="Size.Large" Color="Color.Primary" Class="mr-4" Style="background: rgba(255,255,255,0.2);">
             <MudIcon Icon="@Icons.Material.Filled.Dashboard" Color="Color.Surface" Size="Size.Large"></MudIcon>
         </MudAvatar>
@@ -17,17 +21,61 @@
             </MudText>
         </div>
     </div>
+
+    <MudSpacer />
+
+    @* 우측: 관리자 기능 *@
+    <div class="d-flex flex-column">
+        @if (_isAdmin)
+        {
+            <MudText Typo="Typo.subtitle2" Class="text-white mb-3" Style="opacity:0.85; text-align:right;">
+                관리자 모드로 접속 중입니다.
+            </MudText>
+
+            @if (_employees != null)
+            {
+                <div class="d-flex align-items-center gap-2">
+                    <MudSelect @bind-Value="_value" 
+                    Label="영업사원" 
+                    Clearable="true"
+                    Style="min-width:150px;"
+                    Class="mr-2">
+                        @foreach (var employee in _employees)
+                        {
+                            <MudSelectItem Value="employee.EmpCode">@employee.EmpName</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudButton Variant="Variant.Filled"
+                    Color="Color.Surface"
+                    StartIcon="@Icons.Material.Filled.Refresh"
+                    OnClick="OnRefreshClick"
+                    Class="text-primary">
+                        새로고침
+                    </MudButton>
+                </div>
+            }
+        }
+    </div>
 </MudPaper>
 
+
 @code {
+    [Parameter] public EventCallback OnRefresh { get; set; }
+
     private string _userName = "";
+    private bool _isAdmin = false; // 관리자 여부
     private string _currentDateTime = "";
     private Timer? _timeUpdateTimer;
+    private List<EmployeeDto>? _employees;
+
+    private string _value { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         _userName = authState.User.Identity?.Name ?? "사용자";
+        _isAdmin = authState.User.IsInRole("Admin");
+        _employees = await commonClientService.GetSaleEmployeeAsync();
 
         UpdateDateTime();
         SetupTimeUpdateTimer();
@@ -47,8 +95,15 @@
         }, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
     }
 
+    private async Task OnRefreshClick()
+    {
+        await localStorageService.SetItemAsync("selectedEmployeeCode", _value);
+        await OnRefresh.InvokeAsync();
+    }
+
     public void Dispose()
     {
         _timeUpdateTimer?.Dispose();
+
     }
 }

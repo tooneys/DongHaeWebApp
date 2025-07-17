@@ -21,6 +21,25 @@ namespace WebApi.Services.Common
             throw new NotImplementedException();
         }
 
+        public async Task<List<EmplyeeDto>> GetEmployeeAsync()
+        {
+            try
+            {
+                using var connection = _connectionFactory.CreateConnection();
+                var opticians = await connection.QueryAsync<EmplyeeDto>(
+                    "GetSalesEmployee",
+                    commandType: CommandType.StoredProcedure
+                );
+
+                return opticians.ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "안경사 목록 조회 중 오류 발생");
+                throw;
+            }
+        }
+
         public async Task<List<Optician>> GetOpticiansAsync()
         {
             try

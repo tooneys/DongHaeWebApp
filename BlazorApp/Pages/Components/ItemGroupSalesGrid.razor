@@ -19,7 +19,7 @@
         @if (isLoading)
         {
             <!-- 프로그레스 로딩 -->
-            <div style="height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div style="height: 650px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                 <MudProgressCircular Size="Size.Large" Color="Color.Primary" Indeterminate="true" />
                 <MudText Typo="Typo.body1" Class="mt-4" Color="Color.Secondary">
                     매출 데이터를 불러오는 중입니다...
@@ -28,7 +28,7 @@
         }
         else if (salesData?.Any() == true)
         {
-            <MudTable Items="@salesData" Hover="true" Breakpoint="Breakpoint.Sm" Height="680px">
+            <MudTable Items="@salesData" Hover="true" Breakpoint="Breakpoint.Sm" FixedHeader="true" Height="650px">
                 <HeaderContent>
                     <MudTh Style="width: 80px; text-align: center;">품목군</MudTh>
                     <MudTh Style="width: 80px; text-align: right;">수량(짝)</MudTh>

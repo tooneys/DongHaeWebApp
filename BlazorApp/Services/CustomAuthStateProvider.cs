@@ -36,7 +36,7 @@ namespace BlazorApp.Services
                         {
                             new Claim(ClaimTypes.Name, currentUser.Username ?? string.Empty),
                             new Claim(ClaimTypes.NameIdentifier, currentUser.UserId ?? string.Empty),
-                            new Claim(ClaimTypes.Role, currentUser.IsUser ? "User" : "Admin")
+                            new Claim(ClaimTypes.Role, currentUser.IsAdmin ? "Admin" : "User")
                         };
 
                         var identity = new ClaimsIdentity(claims, "jwt");

@@ -18,6 +18,12 @@
         public bool IsActive { get; set; } = true;
     }
 
+    public class EmployeeDto
+    {
+        public string EmpCode { get; set; } = string.Empty;
+        public string EmpName { get; set; } = string.Empty;
+    }
+
     public class ApiResponse<T>
     {
         public string Message { get; set; } = string.Empty;

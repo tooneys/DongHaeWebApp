@@ -8,5 +8,6 @@ namespace WebApi.Services.Common
         Task<Optician> GetOpticiansByIdAsync(string opticianId);
         Task<List<CodeDto>> GetCodeListAsync(string codeType);
         Task<List<RegionDto>> GetRegionsAsync();
+        Task<List<EmplyeeDto>> GetEmployeeAsync();
     }
 }

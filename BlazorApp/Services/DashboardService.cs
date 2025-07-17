@@ -17,9 +17,10 @@ namespace BlazorApp.Services
 
         public async Task<List<OpticalStoreSales>> GetTopStoresSalesAsync(int count = 10)
         {
-            // 실제 API 호출 시뮬레이션을 위한 지연
+            var salesEmpCode = await _localStorage.GetItemAsync<string>("selectedEmployeeCode");
             var userProfile = await _localStorage.GetItemAsync<UserProfile>("userProfile");
-            var userId = userProfile!.IsAdmin ? "" : userProfile.UserId;
+
+            var userId = userProfile!.IsAdmin ? salesEmpCode : userProfile.UserId;
 
             var response = await _httpClient.GetFromJsonAsync<List<OpticalStoreSales>>($"api/dashboard/sales/top/{count}?userId={userId}");
             return response ?? new List<OpticalStoreSales>();
@@ -27,8 +28,9 @@ namespace BlazorApp.Services
 
         public async Task<List<OpticalStoreSales>> GetAllStoresSalesAsync()
         {
+            var salesEmpCode = await _localStorage.GetItemAsync<string>("selectedEmployeeCode");
             var userProfile = await _localStorage.GetItemAsync<UserProfile>("userProfile");
-            var userId = userProfile!.IsAdmin ? "" : userProfile.UserId;
+            var userId = userProfile!.IsAdmin ? salesEmpCode : userProfile.UserId;
 
             var response = await _httpClient.GetFromJsonAsync<List<OpticalStoreSales>>($"api/dashboard/sales/current-month?userId={userId}");
             return response ?? new List<OpticalStoreSales>();
@@ -36,8 +38,9 @@ namespace BlazorApp.Services
 
         public async Task<List<OpticalStoreSalesDecline>> GetAllStoresSalesDeclineAsync()
         {
+            var salesEmpCode = await _localStorage.GetItemAsync<string>("selectedEmployeeCode");
             var userProfile = await _localStorage.GetItemAsync<UserProfile>("userProfile");
-            var userId = userProfile!.IsAdmin ? "" : userProfile.UserId;
+            var userId = userProfile!.IsAdmin ? salesEmpCode : userProfile.UserId;
 
             var response = await _httpClient.GetFromJsonAsync<List<OpticalStoreSalesDecline>>($"api/dashboard/sales/decline?userId={userId}");
             return response ?? new List<OpticalStoreSalesDecline>();
@@ -45,8 +48,9 @@ namespace BlazorApp.Services
 
         public async Task<List<ItemGroupSales>> GetAllItemGroupSalesAsync()
         {
+            var salesEmpCode = await _localStorage.GetItemAsync<string>("selectedEmployeeCode");
             var userProfile = await _localStorage.GetItemAsync<UserProfile>("userProfile");
-            var userId = userProfile!.IsAdmin ? "" : userProfile.UserId;
+            var userId = userProfile!.IsAdmin ? salesEmpCode : userProfile.UserId;
 
             var response = await _httpClient.GetFromJsonAsync<List<ItemGroupSales>>($"api/dashboard/sales/itemgroup?userId={userId}");
             return response ?? new List<ItemGroupSales>();

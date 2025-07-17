@@ -191,5 +191,35 @@ namespace WebApi.Controllers
                     ex.Message));
             }
         }
+
+        [HttpGet("salesemp")]
+        [ProducesResponseType(typeof(ApiResponse<List<EmplyeeDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetSalesEmpAsync()
+        {
+            try
+            {
+                _logger.LogInformation("영업사원 목록 조회 시작");
+
+                var regions = await _commonService.GetEmployeeAsync();
+
+                _logger.LogInformation("영업사원 목록 조회 완료: Count={Count}", regions?.Count ?? 0);
+
+                return Ok(new ApiResponse<List<EmplyeeDto>>
+                {
+                    Message = "영업사원 목록 조회가 완료되었습니다.",
+                    Data = regions ?? new List<EmplyeeDto>(),
+                    TotalCount = regions?.Count ?? 0
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "영업사원 목록 조회 중 오류 발생");
+                return StatusCode(500, new ApiErrorResponse(
+                    "영업사원 목록 조회 중 오류가 발생했습니다.",
+                    "INTERNAL_ERROR",
+                    ex.Message));
+            }
+        }
     }
 }
