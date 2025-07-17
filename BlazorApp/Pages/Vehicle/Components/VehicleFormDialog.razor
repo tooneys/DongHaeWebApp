@@ -1,5 +1,6 @@
 ﻿@using MudBlazor
 @inherits MudComponentBase
+@inject IVehicleClientService VehicleClientService
 
 <MudDialog>
     <DialogContent>
@@ -155,8 +156,18 @@
             // 운행거리 재계산
             CalculateDistance();
 
-            // 시뮬레이션 지연
-            await Task.Delay(500);
+            // 데이터 전송
+            if (IsEdit)
+            {
+                // 수정 모드: 기존 데이터 업데이트
+                await VehicleClientService.UpdateVehicleAsync(vehicle);
+            }
+            else
+            {
+                // 등록 모드: 새 데이터 추가
+                var response = await VehicleClientService.AddVehicleAsync(vehicle);
+                vehicle.SEQ = response.SEQ; // 새로 생성된 SEQ를 설정
+            }
 
             MudDialog.Close(DialogResult.Ok(vehicle));
         }

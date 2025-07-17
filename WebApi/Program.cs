@@ -11,6 +11,7 @@ using WebApi.Services.Common;
 using WebApi.Services.Dashboard;
 using WebApi.Services.OpticianMap;
 using WebApi.Services.PartnerCard;
+using WebApi.Services.Vehicle;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,7 @@ try
     builder.Services.AddScoped<IPartnerCardService, PartnerCardService>();
     builder.Services.AddScoped<IOpticianMapService, OpticianMapService>();
     builder.Services.AddScoped<IDashboardSalesService, DashboardSalesService>();
+    builder.Services.AddScoped<IVehicleService, VehicleService>();
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

@@ -90,6 +90,7 @@ builder.Services.AddScoped<ICommonClientService, CommonClientService>();
 builder.Services.AddScoped<IPartnerCardClientService, PartnerCardClientService>();
 builder.Services.AddScoped<IOpticianMapClientService, OpticianMapClientService>();
 builder.Services.AddScoped<DashboardService>();     //DashBoard 서비스
+builder.Services.AddScoped<IVehicleClientService, VehicleClientService>();
 
 // MudBlazor 설정 최적화
 builder.Services.AddMudServices(config =>

@@ -1,5 +1,6 @@
 ﻿@page "/vehicles"
 @using BlazorApp.Pages.Vehicle.Components
+@inject IVehicleClientService vehicleClientService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
@@ -98,7 +99,7 @@
 
     private async Task LoadVehicles()
     {
-        vehicles = GetSampleData();
+        vehicles = await vehicleClientService.GetVehiclesById();
         await Task.CompletedTask;
     }
 
@@ -178,36 +179,5 @@
             Snackbar.Add("차량일지가 성공적으로 삭제되었습니다.", Severity.Success);
             StateHasChanged();
         }
-    }
-
-    private List<Vehicle> GetSampleData()
-    {
-        return new List<Vehicle>
-        {
-            new Vehicle
-            {
-                SEQ = 1,
-                DT_COMP = DateTime.Today,
-                CD_EMP = "EMP001",
-                NO_CAR = "12가3456",
-                TX_AREA = "일산",
-                VL_BEFORE = 10000m,
-                VL_AFTER = 10150m,
-                VL_DISTANCE = 150m,
-                VL_FUEL = 70000m
-            },
-            new Vehicle
-            {
-                SEQ = 2,
-                DT_COMP = DateTime.Today.AddDays(-1),
-                CD_EMP = "EMP002",
-                NO_CAR = "34나7890",
-                TX_AREA = "광명",
-                VL_BEFORE = 20000m,
-                VL_AFTER = 20080m,
-                VL_DISTANCE = 80m,
-                VL_FUEL = 50000m
-            }
-        };
     }
 }
