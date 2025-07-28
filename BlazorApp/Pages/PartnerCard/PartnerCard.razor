@@ -22,7 +22,7 @@
 
     @if (_optician == null || string.IsNullOrEmpty(_optician.Id))
     {
-        <MudCard Elevation="2" Class="pa-6 d-flex align-center justify-center mud-card-hover" Style="height: 400px;">
+        <MudCard Elevation="2" Class="pa-6 d-flex align-center justify-center" Style="height: 400px;">
             <MudStack AlignItems="AlignItems.Center">
                 <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Large" />
                 <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">안경원을 선택해 주세요!</MudText>
@@ -31,7 +31,7 @@
     }
     else if (_isLoading || partnerCard == null)
     {
-        <MudCard Elevation="2" Class="pa-6 d-flex align-center justify-center mud-card-hover" Style="height: 400px;">
+        <MudCard Elevation="2" Class="pa-6 d-flex align-center justify-center" Style="height: 400px;">
             <MudStack AlignItems="AlignItems.Center">
                 <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
                 <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">파트너카드 데이터를 가져오는 중입니다...</MudText>
@@ -69,6 +69,11 @@
             <MudTabPanel Text="클레임">
                 <ChildContent>
                     <Claims Data="@partnerCard.Claims" OpticianId="@partnerCard.Optician.Id"></Claims>
+                </ChildContent>
+            </MudTabPanel>
+            <MudTabPanel Text="이미지">
+                <ChildContent>
+                    <StoreImagePage Data="@partnerCard"></StoreImagePage>
                 </ChildContent>
             </MudTabPanel>
         </MudTabs>

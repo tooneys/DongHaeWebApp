@@ -1,0 +1,11 @@
+﻿
+<MudStack Row>
+    <MudPaper Elevation="2" Width="500" Height="500">이미지등록 1</MudPaper>
+    <MudPaper Elevation="2" Width="500" Height="500">이미지등록 2</MudPaper>
+    <MudPaper Elevation="2" Width="500" Height="500">이미지등록 3</MudPaper>
+</MudStack>
+<PromotionComponent Data="Data"></PromotionComponent>
+
+@code {
+    [Parameter] public PartnerCardDto Data { get; set; } = new();
+}

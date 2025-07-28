@@ -2,7 +2,7 @@
 @using BlazorApp.Pages.Vehicle.Components
 @inject IVehicleClientService vehicleClientService
 @inject IDialogService DialogService
-@inject ISnackbar Snackbar
+@inject INotificationService Snackbar
 
 <PageTitle>차량일지 관리</PageTitle>
 
@@ -121,7 +121,7 @@
             // TODO: API 호출로 등록
             newVehicle.SEQ = vehicles.Count + 1;
             vehicles.Add(newVehicle);
-            Snackbar.Add("차량일지가 성공적으로 등록되었습니다.", Severity.Success);
+            Snackbar.ShowSuccess("차량일지가 성공적으로 등록되었습니다.");
             StateHasChanged();
         }
     }
@@ -159,7 +159,7 @@
             if (index >= 0)
             {
                 vehicles[index] = updatedVehicle;
-                Snackbar.Add("차량일지가 성공적으로 수정되었습니다.", Severity.Success);
+                Snackbar.ShowSuccess("차량일지가 성공적으로 수정되었습니다.");
                 StateHasChanged();
             }
         }
@@ -167,17 +167,27 @@
 
     private async Task DeleteVehicle(Vehicle vehicle)
     {
-        bool? result = await DialogService.ShowMessageBox(
-            "삭제 확인",
-            $"차량번호 '{vehicle.TX_AREA}'의 일지를 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.",
-            yesText: "삭제", cancelText: "취소");
-
-        if (result == true)
+        try
         {
-            // TODO: API 호출로 삭제
-            vehicles.Remove(vehicle);
-            Snackbar.Add("차량일지가 성공적으로 삭제되었습니다.", Severity.Success);
-            StateHasChanged();
+            bool? result = await DialogService.ShowMessageBox(
+                "삭제 확인",
+                $"차량번호 '{vehicle.TX_AREA}'의 일지를 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.",
+                yesText: "삭제", cancelText: "취소");
+
+            if (result == true)
+            {
+                // TODO: API 호출로 삭제
+
+                await vehicleClientService.DeleteVehicleAsync(vehicle.SEQ);
+
+                vehicles.Remove(vehicle);
+                Snackbar.ShowSuccess("차량일지가 성공적으로 삭제되었습니다.");
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.ShowError($"Error: {ex.Message}");
         }
     }
 }

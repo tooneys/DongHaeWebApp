@@ -77,5 +77,53 @@ namespace WebApi.Controllers
                 return StatusCode(500, "서버 오류가 발생했습니다.");
             }
         }
+
+        [HttpPost("update")]
+        public async Task<IActionResult> UpdateVehicleAsync([FromBody] VehicleDto vehicleDto)
+        {
+            if (vehicleDto == null)
+            {
+                return BadRequest("차량 정보가 제공되지 않았습니다.");
+            }
+            try
+            {
+                var result = await _vehicleService.UpdateVehicleAsync(vehicleDto);
+
+                _logger.LogInformation($"차량 수정 요청: NO_CAR={vehicleDto.NO_CAR}, CD_EMP={vehicleDto.CD_EMP}");
+
+                return Ok(new ApiResponse<VehicleDto>
+                {
+                    Message = "차량이 성공적으로 수정되었습니다.",
+                    Data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "차량 수정 중 오류 발생");
+                return StatusCode(500, "서버 오류가 발생했습니다.");
+            }
+        }
+
+        [HttpPost("delete")]
+        public async Task<IActionResult> DeleteVehicleAsync([FromBody] int Seq)
+        {
+            try
+            {
+                await _vehicleService.DeleteVehicleAsync(Seq);
+
+                _logger.LogInformation($"차량일자 삭제 요청: Seq={Seq}");
+
+                return Ok(new ApiResponse<string>
+                {
+                    Message = "차량일지가 성공적으로 삭제되었습니다.",
+                    Data = "차량일지가 성공적으로 삭제되었습니다.",
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "차량일지 삭제 중 오류 발생");
+                return StatusCode(500, "서버 오류가 발생했습니다.");
+            }
+        }
     }
 }

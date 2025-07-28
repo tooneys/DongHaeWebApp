@@ -1,7 +1,7 @@
 ﻿@inject DashboardService SalesService
 
 <MudCard>
-    <MudCardHeader>
+    <MudCardHeader style="background-color: aqua">
         <CardHeaderContent>
             <MudText Typo="Typo.h6">당월 안경원별 매출 순위</MudText>
         </CardHeaderContent>
@@ -19,7 +19,7 @@
         @if (isLoading)
         {
             <!-- 프로그레스 로딩 -->
-            <div style="height: calc(100vh - 340px); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div style="height: 270px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                 <MudProgressCircular Size="Size.Large" Color="Color.Primary" Indeterminate="true" />
                 <MudText Typo="Typo.body1" Class="mt-4" Color="Color.Secondary">
                     매출 데이터를 불러오는 중입니다...
@@ -28,25 +28,34 @@
         }
         else if (salesData?.Any() == true)
         {
-            <MudTable Items="@salesData" Hover="true" Breakpoint="Breakpoint.None" Dense="true" FixedHeader="true" Height="calc(100vh - 340px)">
+            <MudTable Items="@salesData" Hover="true" Breakpoint="Breakpoint.Sm" FixedHeader="true" Height="630px">
                 <HeaderContent>
-                    <MudTh Style="width: 50px; text-align: center;">R</MudTh>
-                    <MudTh Style="width: 250px;">안경원명</MudTh>
-                    <MudTh Style="width: 100px; text-align: right;">매출액</MudTh>
+                    <MudTh Style="width: 80px; text-align: center;">순위</MudTh>
+                    <MudTh>안경원명</MudTh>
+                    <MudTh Style="width: 150px; text-align: right;">매출액</MudTh>
                     @* <MudTh Style="width: 100px; text-align: center;">상태</MudTh> *@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd Style="text-align: center;">
-                        <MudText Typo="Typo.body2" Color="@GetRankChipColor(context.Rank)">@context.Rank</MudText>
+                        @if (context.Rank <= 3)
+                        {
+                            <MudChip T="int" Color="@GetRankChipColor(context.Rank)" Size="Size.Small">
+                                @context.Rank
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@context.Rank</MudText>
+                        }
                     </MudTd>
                     <MudTd>
-                        <MudText Typo="Typo.body2">
-                            @context.StoreName
+                        <MudText Typo="Typo.body1">
+                            <strong>@context.StoreName</strong>
                         </MudText>
                     </MudTd>
                     <MudTd Style="text-align: right;">
-                        <MudText Typo="Typo.body2">
-                            @context.FormattedSalesAmount
+                        <MudText Typo="Typo.body1">
+                            <strong>@context.FormattedSalesAmount</strong>
                         </MudText>
                     </MudTd>
                 </RowTemplate>
@@ -106,8 +115,8 @@
     private Color GetRankChipColor(int rank) => rank switch
     {
         1 => Color.Warning,
-        2 => Color.Primary,
+        2 => Color.Secondary,
         3 => Color.Info,
-        _ => Color.Secondary
+        _ => Color.Default
     };
 }

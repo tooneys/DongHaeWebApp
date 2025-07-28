@@ -3,57 +3,64 @@
 @inject ICommonClientService commonClientService
 @inject ILocalStorageService localStorageService
 
-<MudPaper Class="pa-6 d-flex align-items-center justify-content-between"
-Style="background: linear-gradient(90deg, #6a82fb 0%, #fc5c7d 100%); border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.07);"
-Elevation="2">
+<MudPaper Class="pa-2 pa-md-3"
+          Style="background: linear-gradient(90deg, #6a82fb 0%, #fc5c7d 100%); border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.07);"
+          Elevation="2">
 
-    @* 좌측: 아바타 + 환영 메시지 *@
-    <div class="d-flex">
-        <MudAvatar Size="Size.Large" Color="Color.Primary" Class="mr-4" Style="background: rgba(255,255,255,0.2);">
-            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Color="Color.Surface" Size="Size.Large"></MudIcon>
-        </MudAvatar>
-        <div>
-            <MudText Typo="Typo.h5" Class="font-weight-bold text-white" GutterBottom="true" Style="letter-spacing:1px;">
-                안녕하세요, @_userName 님!
-            </MudText>
-            <MudText Typo="Typo.subtitle1" Class="text-white" Style="opacity:0.85;">
-                오늘의 매출 현황을 확인해보세요.<br />
-            </MudText>
+    @* 모바일에서는 세로 배치, 데스크톱에서는 가로 배치 *@
+    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-4">
+
+        @* 좌측: 아바타 + 환영 메시지 *@
+        <div class="pt-2 d-flex align-items-center">
+            <MudAvatar Size="Size.Large" Color="Color.Primary" Class="mr-3 mr-md-4" Style="background: rgba(255,255,255,0.2);">
+                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Color="Color.Surface" Size="Size.Large"></MudIcon>
+            </MudAvatar>
+            <div>
+                <MudText Typo="Typo.h6" Typo-md="Typo.h5" Class="font-weight-bold text-white" GutterBottom="true" Style="letter-spacing:1px;">
+                    안녕하세요, @_userName 님!
+                </MudText>
+                <MudText Typo="Typo.body2" Typo-md="Typo.subtitle1" Class="text-white" Style="opacity:0.85;">
+                    오늘의 매출 현황을 확인해보세요.
+                </MudText>
+            </div>
         </div>
-    </div>
 
-    <MudSpacer />
-
-    @* 우측: 관리자 기능 *@
-    <div class="d-flex flex-column">
+        @* 우측: 관리자 기능 *@
         @if (_isAdmin)
         {
-            <MudText Typo="Typo.subtitle2" Class="text-white mb-3" Style="opacity:0.85; text-align:right;">
-                관리자 모드로 접속 중입니다.
-            </MudText>
+            <MudSpacer />
 
-            @if (_employees != null)
-            {
-                <div class="d-flex align-items-center gap-2">
-                    <MudSelect @bind-Value="_value" 
-                    Label="영업사원" 
-                    Clearable="true"
-                    Style="min-width:150px;"
-                    Class="mr-2">
-                        @foreach (var employee in _employees)
-                        {
-                            <MudSelectItem Value="employee.EmpCode">@employee.EmpName</MudSelectItem>
-                        }
-                    </MudSelect>
-                    <MudButton Variant="Variant.Filled"
-                    Color="Color.Surface"
-                    StartIcon="@Icons.Material.Filled.Refresh"
-                    OnClick="OnRefreshClick"
-                    Class="text-primary">
-                        새로고침
-                    </MudButton>
-                </div>
-            }
+            <div class="d-flex flex-column align-items-start align-items-md-end w-100 w-md-auto">
+                <MudText Typo="Typo.caption" Typo-md="Typo.subtitle2" Class="text-white mb-1 mb-md-2" Style="opacity:0.85;">
+                    관리자 모드로 접속 중입니다.
+                </MudText>
+
+                @if (_employees != null)
+                {
+                    <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 w-100 w-md-auto">
+                        <MudSelect @bind-Value="_value"
+                                   Label="영업사원"
+                                   Clearable="true"
+                                   Style="min-width:150px; max-width:200px;"
+                                   Class="flex-grow-1 flex-sm-grow-0">
+                            @foreach (var employee in _employees)
+                            {
+                                <MudSelectItem Value="employee.EmpCode">@employee.EmpName</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Surface"
+                                   StartIcon="@Icons.Material.Filled.Refresh"
+                                   OnClick="OnRefreshClick"
+                                   Class="text-primary"
+                                   Size="Size.Medium"
+                                   FullWidth="true"
+                                   FullWidth-sm="false">
+                            전체 새로고침
+                        </MudButton>
+                    </div>
+                }
+            </div>
         }
     </div>
 </MudPaper>

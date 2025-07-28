@@ -1,4 +1,5 @@
 ﻿using BlazorApp.Models;
+using BlazorApp.Pages.Vehicle;
 using BlazorApp.Services.Auth;
 using Blazored.LocalStorage;
 using Newtonsoft.Json;
@@ -10,7 +11,8 @@ namespace BlazorApp.Services
     {
         Task<List<Vehicle>> GetVehiclesById();
         Task<Vehicle> AddVehicleAsync(Vehicle vehicle);
-        Task UpdateVehicleAsync(Vehicle vehicle);
+        Task<Vehicle> UpdateVehicleAsync(Vehicle vehicle);
+        Task DeleteVehicleAsync(int Seq);
     }
 
     public class VehicleClientService : IVehicleClientService
@@ -18,18 +20,21 @@ namespace BlazorApp.Services
         private readonly HttpClient _httpClient;
         private readonly ILocalStorageService _localStorageService;
         private readonly IApiResponseHandler _apiResponseHandler;
+        private readonly INotificationService _notificationService;
         private readonly ILogger<VehicleClientService> _logger;
 
         public VehicleClientService(
             HttpClient httpClient,
             ILocalStorageService localStorageService,
             IApiResponseHandler apiResponseHandler,
+            INotificationService notificationService,
             ILogger<VehicleClientService> logger
         )
         {
             _httpClient = httpClient;
             _localStorageService = localStorageService;
             _apiResponseHandler = apiResponseHandler;
+            _notificationService = notificationService;
             _logger = logger;
         }
 
@@ -78,7 +83,6 @@ namespace BlazorApp.Services
         {
             try
             {
-
                 _logger.LogInformation("차량일지 작성 시작");
 
                 // 로그인한 사원번호 입력
@@ -113,9 +117,34 @@ namespace BlazorApp.Services
             
         }
 
-        public Task UpdateVehicleAsync(Vehicle vehicle)
+        public async Task<Vehicle> UpdateVehicleAsync(Vehicle vehicle)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _logger.LogInformation("차량일지 수정 시작");
+
+                ValidateVehicle(vehicle);
+
+                var response = await _httpClient.PostAsJsonAsync("api/vehicle/update", vehicle);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("차량일지 수정 완료");
+                    var result = await _apiResponseHandler.HandleResponseAsync<Vehicle>(response);
+                    return result?.Data ?? throw new InvalidOperationException("차량일지 수정 후 반환된 데이터가 없습니다.");
+                }
+                else
+                {
+                    var errorMessage = await _apiResponseHandler.ExtractErrorMessageAsync(response);
+                    _logger.LogError($"차량일지 수정 실패: {errorMessage}");
+                    throw new HttpRequestException($"차량일지 수정 실패: {errorMessage}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "차량일지 수정 중 오류 발생");
+                throw;
+            }
         }
 
         private void ValidateVehicle(Vehicle vehicle)
@@ -126,15 +155,45 @@ namespace BlazorApp.Services
             }
             if (vehicle.DT_COMP == null)
             {
+                _notificationService.ShowError("등록일자가 비어 있습니다.");
                 throw new ArgumentException("등록일자가 비어 있습니다.", nameof(vehicle.DT_COMP));
             }
             if (string.IsNullOrWhiteSpace(vehicle.CD_EMP))
             {
+                _notificationService.ShowError("사원 코드가 비어 있습니다.");
                 throw new ArgumentException("사원 코드가 비어 있습니다.", nameof(vehicle.CD_EMP));
             }
             if (string.IsNullOrWhiteSpace(vehicle.NO_CAR))
             {
+                _notificationService.ShowError("차량 번호가 비어 있습니다.");
                 throw new ArgumentException("차량 번호가 비어 있습니다.", nameof(vehicle.NO_CAR));
+            }
+        }
+
+        public async Task DeleteVehicleAsync(int Seq)
+        {
+            try
+            {
+                _logger.LogInformation("차량일지 삭제 시작");
+
+                var response = await _httpClient.PostAsJsonAsync("api/vehicle/delete", Seq);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("차량일지 삭제 완료");
+                    await _apiResponseHandler.HandleResponseAsync<string>(response);
+                }
+                else
+                {
+                    var errorMessage = await _apiResponseHandler.ExtractErrorMessageAsync(response);
+                    _logger.LogError($"차량일지 삭제 실패: {errorMessage}");
+                    throw new HttpRequestException($"차량일지 삭제 실패: {errorMessage}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "차량일지 삭제 중 오류 발생");
+                throw;
             }
         }
     }

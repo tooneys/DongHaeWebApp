@@ -37,7 +37,7 @@
                 <MudButton Variant="Variant.Outlined"
                            Color="Color.Secondary"
                            @onclick="ClearAllFilters"
-                           StartIcon="Icons.Material.Filled.Clear"
+                           StartIcon="@Icons.Material.Filled.Clear"
                            Disabled="!HasAnyFilter"
                            Size="Size.Small">
                     전체 초기화
@@ -63,7 +63,7 @@
 {
     <MudPaper Class="pa-3 mb-3" Elevation="1">
         <MudText Typo="Typo.subtitle2" Class="mb-2">
-            <MudIcon Icon="Icons.Material.Filled.FilterList" Size="Size.Small" Class="mr-1" />
+            <MudIcon Icon="@Icons.Material.Filled.FilterList" Size="Size.Small" Class="mr-1" />
             적용된 필터
         </MudText>
         <MudChipSet T="string">

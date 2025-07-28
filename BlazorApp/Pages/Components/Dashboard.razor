@@ -7,20 +7,20 @@
     <DashboardHeader OnRefresh="RefreshAllAsync" />
 
     <!-- 메인 대시보드 그리드 -->
-    <MudPaper Class="pa-2" Elevation="2" Style="border-radius: 16px; height: calc(100vh - 230px)">
-        <MudGrid Spacing="3">
+    <MudPaper Elevation="0" Style="border-radius: 16px; height: calc(100vh - 230px)">
+        <MudGrid Spacing="2">
             <!-- 매출 섹션 -->
-            <MudItem xs="12" lg="3">
+            <MudItem sm="12" lg="3">
                 <DashboardSalesSection @ref="_salesSection" />
             </MudItem>
 
             <!-- 매출 하락 현황 섹션 -->
-            <MudItem xs="12" lg="5">
+            <MudItem sm="12" lg="5">
                 <DashboardDeclineSection @ref="_declineSection" />
             </MudItem>
 
             <!-- 품목별 매출 섹션 -->
-            <MudItem xs="12" lg="4">
+            <MudItem sm="12" lg="4">
                 <DashboardItemSection @ref="_itemSection" />
             </MudItem>
         </MudGrid>

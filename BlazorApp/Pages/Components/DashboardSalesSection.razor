@@ -1,7 +1,7 @@
 ﻿@implements IDashboardSection
 @implements IDisposable
 
-<MudPaper Class="pa-0" Elevation="3" Style="height: 100%; border-radius: 12px; overflow: hidden;">
+<MudPaper Class="pa-0" Elevation="3" Style="height: calc(100vh - 190px); border-radius: 12px; overflow: hidden;">
     <div style="display: flex; flex-direction: column;">
         <!-- 섹션 헤더 -->
         <div class="section-header">
@@ -21,7 +21,7 @@
         </div>
 
         <!-- 컨텐츠 영역 -->
-        @if (IsLoading && _dashboardSales == null)
+        @if (IsLoading && _salesGrid == null)
         {
             <div class="d-flex justify-center align-center" style="height: 400px;">
                 <MudProgressCircular Size="Size.Large" Indeterminate="true" />
@@ -29,13 +29,18 @@
         }
         else
         {
-            <DashboardSales @ref="_dashboardSales" />
+
+            <div class="scroll-box" @ref="_scrollContainer">
+                <SalesGrid @ref="_salesGrid" />
+            </div>
+            //<DashboardSales @ref="_dashboardSales" />
         }
     </div>
 </MudPaper>
 
 @code {
-    private DashboardSales? _dashboardSales;
+    private SalesGrid? _salesGrid;
+    private ElementReference _scrollContainer;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     public bool IsLoading { get; private set; } = false;
@@ -52,9 +57,9 @@
             using var combinedCts = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken, _cancellationTokenSource.Token);
 
-            if (_dashboardSales != null)
+            if (_salesGrid != null)
             {
-                await _dashboardSales.RefreshAllAsync();
+                await _salesGrid.RefreshAsync();
             }
         }
         catch (OperationCanceledException)
@@ -79,5 +84,13 @@
     .section-header {
         background: linear-gradient(45deg, #f8f9ff 0%, #e6f3ff 100%);
         border-bottom: 1px solid #e0e7ff;
+    }
+
+    .scroll-box {
+        max-height: 100%;
+        overflow-y: auto; /* 필요 시 x 도 추가 */
+        padding: 8px;
+        /* iOS·모바일 성능 개선 */
+        -webkit-overflow-scrolling: touch;
     }
 </style>

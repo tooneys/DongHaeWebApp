@@ -7,7 +7,7 @@
     <MudGrid>
         <!-- 거래처 정보 섹션 -->
         <MudItem xs="12" md="6">
-            <MudCard Elevation="3" Class="pa-4 mud-card-hover">
+            <MudCard Elevation="3" Class="pa-4">
                 <MudCardHeader>
                     <MudText Typo="Typo.h6" Color="Color.Primary">거래처 정보</MudText>
                 </MudCardHeader>
@@ -43,7 +43,7 @@
 
         <!-- 파트너 카드 세부 정보 섹션 -->
         <MudItem xs="12" md="6">
-            <MudCard Elevation="3" Class="pa-4 mud-card-hover">
+            <MudCard Elevation="3" Class="pa-4">
                 <MudCardHeader>
                     <MudText Typo="Typo.h6" Color="Color.Primary">파트너 카드 세부 정보</MudText>
                 </MudCardHeader>
@@ -77,7 +77,7 @@
 
         <!-- 거래처 비고 테이블 -->
         <MudItem xs="12" md="6">
-            <MudCard Elevation="3" Class="pa-4 mud-card-hover">
+            <MudCard Elevation="3" Class="pa-4">
                 <MudCardHeader>
                     <MudText Typo="Typo.h6" Color="Color.Primary">거래처 비고</MudText>
                 </MudCardHeader>
@@ -101,51 +101,7 @@
 
         <!-- 판촉물 테이블 -->
         <MudItem xs="12" md="6">
-            <MudCard Elevation="3" Class="pa-4 mud-card-hover">
-                <MudCardHeader>
-                    <MudText Typo="Typo.h6" Color="Color.Primary">판촉물</MudText>
-                    <MudSpacer />
-                    <MudButton
-                        Variant="Variant.Filled"
-                        StartIcon=@Icons.Material.Filled.Add
-                        Color="Color.Primary"
-                        OnClick="OpenAddDialog">
-                        추가
-                    </MudButton>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudTable Items="@Data.Promotions" Hover="true" Height="300px" Dense="true" Striped="true" Breakpoint="Breakpoint.Sm">
-                        <HeaderContent>
-                            <MudTh>일자</MudTh>
-                            <MudTh>판촉물</MudTh>
-                            <MudTh>이미지</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="일자">@context.RegDate?.ToString("yyyy-MM-dd")</MudTd>
-                            <MudTd DataLabel="판촉물">@context.Promotion</MudTd>
-                            <MudTd>
-                                @if (!string.IsNullOrEmpty(context.ImageUrl))
-                                {
-                                    <MudImage Src="@GetFullImageUrl(context.ImageUrl)"
-                                              Alt="@context.Promotion"
-                                              Height="50"
-                                              Width="50"
-                                              ObjectFit="ObjectFit.Cover"
-                                              Style="border-radius: 4px;"
-                                              @onclick="() => ShowImageDialog(GetFullImageUrl(context.ImageUrl))" />
-                                }
-                                else
-                                {
-                                    <MudIcon Icon="@Icons.Material.Filled.Image" Size="Size.Large" />
-                                }
-                            </MudTd>
-                        </RowTemplate>
-                        <PagerContent>
-                            <MudTablePager />
-                        </PagerContent>
-                    </MudTable>
-                </MudCardContent>
-            </MudCard>
+            <PromotionComponent Data="Data"/>
         </MudItem>
     </MudGrid>
 }
@@ -159,59 +115,5 @@
 </style>
 
 @code {
-    [Parameter] 
-    public PartnerCardDto Data { get; set; } = new();
-    
-    private async Task OpenAddDialog()
-    {
-        var options = new DialogOptions 
-        { 
-            CloseButton = true,
-            MaxWidth = MaxWidth.Medium 
-        };
-
-        var parameters = new DialogParameters
-        {
-            ["OpticianId"] = Data.Id
-        };
-
-        var dialog = DialogService.Show<AddPromotionDialog>("판촉물 추가", parameters, options);
-        var result = await dialog.Result;
-
-        if (result is { Canceled: false, Data: OpticianPromotion newItem })
-        {
-            // 새로운 리스트 참조 생성으로 Blazor가 변경을 감지하도록 함
-            var updatedPromotions = new List<OpticianPromotion>(Data.Promotions);
-            updatedPromotions.Add(newItem);
-            Data.Promotions = updatedPromotions;
-        }
-    }
-    
-    private string GetFullImageUrl(string imageUrl)
-    {
-        if (string.IsNullOrEmpty(imageUrl))
-            return string.Empty;
-            
-        // 이미 전체 URL인 경우
-        if (imageUrl.StartsWith("http"))
-            return imageUrl;
-            
-        // 상대 경로인 경우 기본 URL 추가
-        return $"{Http.BaseAddress?.ToString().TrimEnd('/')}{imageUrl}";
-    }
-
-    private async Task ShowImageDialog(string imageUrl)
-    {
-        var parameters = new DialogParameters();
-        parameters.Add("ImageUrl", imageUrl);
-
-        var options = new DialogOptions()
-            {
-                CloseButton = true,
-                MaxWidth = MaxWidth.Large,
-                FullWidth = true
-            };
-
-        await DialogService.ShowAsync<ImageDialog>("이미지 보기", parameters, options);
-    }
+    [Parameter] public PartnerCardDto Data { get; set; } = new();
 }

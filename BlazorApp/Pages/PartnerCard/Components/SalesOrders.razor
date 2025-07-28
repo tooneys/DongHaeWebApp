@@ -2,7 +2,7 @@
 
 @using BlazorApp.Models
 
-<MudCard Elevation="3" Class="pa-2 mud-card-hover">
+<MudCard Elevation="3" Class="pa-2">
     <MudCardHeader>
         <MudText Typo="Typo.h6" Color="Color.Primary">판매 내역</MudText>
     </MudCardHeader>
@@ -20,7 +20,17 @@
         }
         else
         {
-            <MudTable Items="@Data" Height="400px" FixedHeader="true" HorizontalScrollbar="true" Hover="true" Elevation="0">
+
+            <!-- 필터 섹션을 별도 컴포넌트로 분리 고려 -->
+            <VisitHistoryFilter @bind-StartDate="startDate"
+                                @bind-EndDate="endDate"
+                                @bind-SearchText="searchText"
+                                OnFilterCleared="ClearAllFilters"
+                                OnFilterChanged="OnFilterChanged" />
+            
+            <MudDivider />
+
+            <MudTable Items="@FilteredData" Height="400px" FixedHeader="true" HorizontalScrollbar="true" Hover="true" Elevation="0">
                 <HeaderContent>
                     <MudTh Class="text-center">주문분류</MudTh>
                     <MudTh Class="text-center">주문일자</MudTh>
@@ -94,4 +104,69 @@
 @code {
     [Parameter]
     public List<SalesOrderDto> Data { get; set; } = new();
+
+    private DateTime? startDate;
+    private DateTime? endDate;
+    private string searchText = string.Empty;
+
+    // 메모이제이션을 위한 캐시
+    private IEnumerable<SalesOrderDto>? _filteredDataCache;
+    private (DateTime?, DateTime?, int) _lastFilterState;
+
+    private IEnumerable<SalesOrderDto> FilteredData
+    {
+        get
+        {
+            var currentState = (startDate, endDate, Data?.Count ?? 0);
+
+            // 필터 조건이나 데이터가 변경되지 않았다면 캐시된 결과 반환
+            if (_filteredDataCache != null && _lastFilterState.Equals(currentState))
+                return _filteredDataCache;
+
+            _lastFilterState = currentState;
+            _filteredDataCache = ComputeFilteredData();
+            return _filteredDataCache;
+        }
+    }
+
+    private IEnumerable<SalesOrderDto> ComputeFilteredData()
+    {
+        if (Data == null) return Enumerable.Empty<SalesOrderDto>();
+
+        var filtered = Data.AsEnumerable();
+
+        if (startDate.HasValue)
+        {
+            filtered = filtered.Where(x =>
+                DateTime.TryParse(x.DT_COMP, out var date) && date >= startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            filtered = filtered.Where(x =>
+                DateTime.TryParse(x.DT_COMP, out var date) && date <= endDate.Value);
+        }
+
+        return filtered.OrderByDescending(x => x.DT_COMP).ToList(); // ToList()로 즉시 실행
+    }
+
+    private void ClearAllFilters()
+    {
+        startDate = null;
+        endDate = null;
+        searchText = null;
+        _filteredDataCache = null; // 캐시 무효화
+    }
+
+    private void OnFilterChanged(FilterChangedEventArgs args)
+    {
+        // 필터 변경 시 처리 로직
+        _filteredDataCache = null; // 캐시 무효화
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _filteredDataCache = null;
+    }
 }

@@ -81,5 +81,66 @@ namespace WebApi.Services.Vehicle
             }
         }
 
+        public async Task<VehicleDto> UpdateVehicleAsync(VehicleDto vehicleDto)
+        {
+            try
+            {
+                using var connection = _connectionFactory.CreateConnection();
+
+                // 파라미터 생성
+                var parameters = new DynamicParameters();
+                parameters.Add("@SEQ", vehicleDto.SEQ, DbType.Int32);
+                parameters.Add("@CD_EMP", vehicleDto.CD_EMP, DbType.String);
+                parameters.Add("@NO_CAR", vehicleDto.NO_CAR, DbType.String);
+                parameters.Add("@DT_COMP", vehicleDto.DT_COMP?.ToString("yyyyMMdd"), DbType.String);
+                parameters.Add("@TX_AREA", vehicleDto.TX_AREA, DbType.String);
+                parameters.Add("@VL_BEFORE", vehicleDto.VL_BEFORE, DbType.Decimal);
+                parameters.Add("@VL_AFTER", vehicleDto.VL_AFTER, DbType.Decimal);
+                parameters.Add("@VL_DISTANCE", vehicleDto.VL_DISTANCE, DbType.Decimal);
+                parameters.Add("@AM_OIL", vehicleDto.VL_FUEL, DbType.Decimal);
+                parameters.Add("@CD_INSUSER", vehicleDto.CD_EMP, DbType.String);
+                parameters.Add("@CD_UPDUSER", vehicleDto.CD_EMP, DbType.String);
+
+                var response = await connection.ExecuteAsync(
+                    "ModifyVehicle",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+
+                _logger.LogInformation($"차량일지 데이터베이스 저장 완료: SEQ={vehicleDto.SEQ}");
+
+                return vehicleDto ?? new VehicleDto();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"차량일지 저장 중 오류 발생: NO_CAR={vehicleDto.NO_CAR}");
+                throw;
+            }
+        }
+
+        public async Task DeleteVehicleAsync(int Seq)
+        {
+            try
+            {
+                using var connection = _connectionFactory.CreateConnection();
+
+                // 파라미터 생성
+                var parameters = new DynamicParameters();
+                parameters.Add("@SEQ", Seq, DbType.Int32);
+
+                var response = await connection.ExecuteAsync(
+                    "DeleteVehicle",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+
+                _logger.LogInformation($"차량일지 데이터베이스 저장 완료: SEQ={Seq}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"차량일지 저장 중 오류 발생: SEQ={Seq}");
+                throw;
+            }
+        }
     }
 }

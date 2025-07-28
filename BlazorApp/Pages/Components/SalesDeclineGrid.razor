@@ -19,7 +19,7 @@
         @if (isLoading)
         {
             <!-- 프로그레스 로딩 -->
-            <div style="height: 650px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div style="height: calc(100vh - 340px); display: flex; flex-direction: column; align-items: center; justify-content: center;">
                 <MudProgressCircular Size="Size.Large" Color="Color.Primary" Indeterminate="true" />
                 <MudText Typo="Typo.body1" Class="mt-4" Color="Color.Secondary">
                     매출 데이터를 불러오는 중입니다...
@@ -28,10 +28,10 @@
         }
         else if (salesData?.Any() == true)
         {
-            <MudTable Items="@salesData" Hover="true" Breakpoint="Breakpoint.Sm" FixedHeader="true" Height="650px">
+            <MudTable Items="@salesData" Hover="true" Breakpoint="Breakpoint.None" Dense="true" FixedHeader="true" Height="calc(100vh - 340px)">
                 <HeaderContent>
-                    <MudTh Style="width: 80px; text-align: center;">순위</MudTh>
-                    <MudTh>안경원명</MudTh>
+                    <MudTh Style="width: 50px; text-align: center;">R</MudTh>
+                    <MudTh Style="width: 200px;">안경원명</MudTh>
                     <MudTh Style="width: 150px; text-align: right;">전년평균매출</MudTh>
                     <MudTh Style="width: 150px; text-align: right;">전월매출</MudTh>
                     <MudTh Style="width: 150px; text-align: right;">당월매출</MudTh>
@@ -39,40 +39,34 @@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd Style="text-align: center;">
-                        @if (context.Rank <= 3)
-                        {
-                            <MudChip T="int" Color="@GetRankChipColor(context.Rank)" Size="Size.Small">
-                                @context.Rank
-                            </MudChip>
-                        }
-                        else
-                        {
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">@context.Rank</MudText>
-                        }
+                        <MudText Typo="Typo.body2" Color="@GetRankChipColor(context.Rank)">@context.Rank</MudText>
                     </MudTd>
                     <MudTd>
-                        <MudText Typo="Typo.body1">
-                            <strong>@context.StoreName</strong>
+                        <MudTooltip Text="@context.StoreName" Placement="Placement.Top">
+                            <MudText Typo="Typo.body2"
+                                     Style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help;">
+                                @context.StoreName
+                            </MudText>
+                        </MudTooltip>
+                    </MudTd>
+                    <MudTd Style="text-align: right;">
+                        <MudText Typo="Typo.body2">
+                            @context.PreyearAvgSales.ToString("N0")
                         </MudText>
                     </MudTd>
                     <MudTd Style="text-align: right;">
-                        <MudText Typo="Typo.body1">
-                            <strong>@context.PreyearAvgSales.ToString("N0")</strong>
+                        <MudText Typo="Typo.body2">
+                            @context.PremonthSumSales.ToString("N0")
                         </MudText>
                     </MudTd>
                     <MudTd Style="text-align: right;">
-                        <MudText Typo="Typo.body1">
-                            <strong>@context.PremonthSumSales.ToString("N0")</strong>
+                        <MudText Typo="Typo.body2">
+                           @context.MonthSumSales.ToString("N0")
                         </MudText>
                     </MudTd>
                     <MudTd Style="text-align: right;">
-                        <MudText Typo="Typo.body1">
-                            <strong>@context.MonthSumSales.ToString("N0")</strong>
-                        </MudText>
-                    </MudTd>
-                    <MudTd Style="text-align: right;">
-                        <MudText Typo="Typo.body1" Color="@(context.DiffAmount < 0 ? Color.Error : Color.Primary)">
-                            <strong>@context.DiffAmount.ToString("N0")</strong>
+                        <MudText Typo="Typo.body2" Color="@(context.DiffAmount < 0 ? Color.Error : Color.Primary)">
+                            @context.DiffAmount.ToString("N0")
                         </MudText>
                     </MudTd>
                 </RowTemplate>
@@ -134,8 +128,8 @@
     private Color GetRankChipColor(int rank) => rank switch
     {
         1 => Color.Warning,
-        2 => Color.Secondary,
+        2 => Color.Primary,
         3 => Color.Info,
-        _ => Color.Default
+        _ => Color.Secondary
     };
 }
