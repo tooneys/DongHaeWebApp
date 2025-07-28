@@ -18,6 +18,8 @@
         public string Tel { get; set; } = string.Empty;
         public string FirstNote { get; set; } = string.Empty;
         public string CreateAt { get; set; } = string.Empty;
-
+        public string Image1Url { get; set; } = string.Empty;
+        public string Image2Url { get; set; } = string.Empty;
+        public string Image3Url { get; set; } = string.Empty;
     }
 }

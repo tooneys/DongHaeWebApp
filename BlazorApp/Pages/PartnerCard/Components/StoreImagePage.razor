@@ -1,11 +1,134 @@
-﻿
-<MudStack Row>
-    <MudPaper Elevation="2" Width="500" Height="500">이미지등록 1</MudPaper>
-    <MudPaper Elevation="2" Width="500" Height="500">이미지등록 2</MudPaper>
-    <MudPaper Elevation="2" Width="500" Height="500">이미지등록 3</MudPaper>
+﻿<MudStack Row Spacing="4" Class="mb-6" Justify="Justify.SpaceEvenly">
+    <MudPaper Elevation="2" Width="300px" Height="300px" Class="d-flex flex-column align-items-center justify-content-center pa-4" Style="border-radius: 12px; border: 2px dashed #e0e0e0;">
+        @if (!string.IsNullOrEmpty(Data.Optician.Image1Url))
+        {
+            <MudImage Src="@Data.Optician.Image1Url" Alt="이미지 1" Width="200" Height="200" ObjectFit="ObjectFit.Cover" Style="border-radius: 8px;" />
+            <p>@Data.Optician.Image1Url</p>
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveImage(1)" Class="mt-2" Size="Size.Small" />
+        }
+        else
+        {
+            <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
+            <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">이미지 등록 1</MudText>
+            <MudFileUpload T="IBrowserFile" Accept=".jpg,.jpeg,.png,.gif" FilesChanged="(file) => OnImageUpload(file, 1)" MaxAllowedSize="5242880">
+                <ActivatorContent>
+                    <MudFab Color="Color.Success"
+                            StartIcon="@Icons.Material.Filled.AttachFile" />
+                </ActivatorContent>
+            </MudFileUpload>
+        }
+    </MudPaper>
+
+    <MudPaper Elevation="2" Width="300px" Height="300px" Class="d-flex flex-column align-items-center justify-content-center pa-4" Style="border-radius: 12px; border: 2px dashed #e0e0e0;">
+        @if (!string.IsNullOrEmpty(Data.Optician.Image2Url))
+        {
+            <MudImage Src="@Data.Optician.Image2Url" Alt="이미지 2" Width="200" Height="200" ObjectFit="ObjectFit.Cover" Style="border-radius: 8px;" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveImage(2)" Class="mt-2" Size="Size.Small" />
+        }
+        else
+        {
+            <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
+            <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">이미지 등록 2</MudText>
+            <MudFileUpload T="IBrowserFile" Accept=".jpg,.jpeg,.png,.gif" FilesChanged="(file) => OnImageUpload(file, 2)" MaxAllowedSize="5242880">
+                <ActivatorContent>
+                    <MudFab Color="Color.Success"
+                            StartIcon="@Icons.Material.Filled.AttachFile" />
+                </ActivatorContent>
+            </MudFileUpload>
+        }
+    </MudPaper>
+
+    <MudPaper Elevation="2" Width="300px" Height="300px" Class="d-flex flex-column align-items-center justify-content-center pa-4" Style="border-radius: 12px; border: 2px dashed #e0e0e0;">
+        @if (!string.IsNullOrEmpty(Data.Optician.Image3Url))
+        {
+            <MudImage Src="@Data.Optician.Image3Url" Alt="이미지 3" Width="200" Height="200" ObjectFit="ObjectFit.Cover" Style="border-radius: 8px;" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveImage(3)" Class="mt-2" Size="Size.Small" />
+        }
+        else
+        {
+            <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
+            <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">이미지 등록 3</MudText>
+            <MudFileUpload T="IBrowserFile" Accept=".jpg,.jpeg,.png,.gif" FilesChanged="(file) => OnImageUpload(file, 3)" MaxAllowedSize="5242880">
+                <ActivatorContent>
+                    <MudFab Color="Color.Success"
+                            StartIcon="@Icons.Material.Filled.AttachFile" />
+                </ActivatorContent>
+            </MudFileUpload>
+        }
+    </MudPaper>
 </MudStack>
+
 <PromotionComponent Data="Data"></PromotionComponent>
 
 @code {
     [Parameter] public PartnerCardDto Data { get; set; } = new();
+    [Parameter] public EventCallback<PartnerCardDto> DataChanged { get; set; }
+    [Parameter] public EventCallback OnSaveClicked { get; set; }
+    [Parameter] public EventCallback OnCancelClicked { get; set; }
+
+    private async Task RemoveImage(int imageSlot)
+    {
+        switch (imageSlot)
+        {
+            case 1:
+                Data.Optician.Image1Url = string.Empty;
+                break;
+            case 2:
+                Data.Optician.Image2Url = string.Empty;
+                break;
+            case 3:
+                Data.Optician.Image3Url = string.Empty;
+                break;
+        }
+
+        await DataChanged.InvokeAsync(Data);
+        StateHasChanged();
+    }
+
+    private async Task OnImageUpload(IBrowserFile file, int imageSlot)
+    {
+        // 파일 크기 체크 (5MB)
+        if (file.Size > 5242880)
+        {
+            // 에러 처리
+            return;
+        }
+
+        // 이미지 업로드 처리 로직
+        try
+        {
+            using var stream = file.OpenReadStream(5242880);
+            // 여기서 실제 파일 업로드 서비스 호출
+            var imageUrl = await UploadImageAsync(stream, file.Name);
+
+            switch (imageSlot)
+            {
+                case 1:
+                    Data.Optician.Image1Url = imageUrl;
+                    break;
+                case 2:
+                    Data.Optician.Image2Url = imageUrl;
+                    break;
+                case 3:
+                    Data.Optician.Image3Url = imageUrl;
+                    break;
+            }
+
+            await DataChanged.InvokeAsync(Data);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // 에러 처리
+            Console.WriteLine($"이미지 업로드 실패: {ex.Message}");
+        }
+    }
+
+    private async Task<string> UploadImageAsync(Stream stream, string fileName)
+    {
+        // 실제 이미지 업로드 로직 구현
+        // 예: Azure Blob Storage, AWS S3, 로컬 서버 등
+        await Task.Delay(1000); // 시뮬레이션
+        return $"/images/{Guid.NewGuid()}-{fileName}";
+    }
 }
