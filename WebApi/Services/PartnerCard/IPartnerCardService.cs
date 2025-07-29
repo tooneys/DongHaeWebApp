@@ -23,5 +23,6 @@ namespace WebApi.Services.PartnerCard
         Task<OpticianHistoryDto> UpdateVisitHistoryAsync(OpticianHistoryDto historyDto);
         Task<bool> DeleteVisitHistoryAsync(int historyId); // string에서 int로 변경
         Task<OpticianPromotion> AddPromotionAsync(OpticianPromotion promotion);
+        Task UpdateOpticianStoreImage(OpticianStoreImage storeImage);
     }
 }

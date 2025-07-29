@@ -13,24 +13,28 @@ namespace BlazorApp.Services.PartnerCard
         Task<OpticianHistoryDto?> GetVisitHistoryDetailAsync(int historyId);
         Task<OpticianHistoryDto?> UpdateVisitHistoryAsync(int historyId, OpticianHistoryDto historyDto);
         Task<bool> DeleteVisitHistoryAsync(int historyId);
-        
         // 판촉물 관련 메서드 추가
         Task<OpticianPromotion?> AddPromotionAsync(string opticianId, string regDate, string promotion, IBrowserFile imageFile);
+        Task<string> StorImageUploadAsync(IBrowserFile imageFile, int imageSlot, string opticianId);
+        Task<bool> StoreImageDeleteAsync(int imageSlot, string opticianId);
     }
 
     public class PartnerCardClientService : IPartnerCardClientService
     {
         private readonly HttpClient _httpClient;
         private readonly IApiResponseHandler _apiResponseHandler;
+        private readonly INotificationService _notificationService;
         private readonly ILogger<PartnerCardClientService> _logger;
 
         public PartnerCardClientService(
             HttpClient httpClient,
             IApiResponseHandler apiResponseHandler,
+            INotificationService notificationService,
             ILogger<PartnerCardClientService> logger)
         {
             _httpClient = httpClient;
             _apiResponseHandler = apiResponseHandler;
+            _notificationService = notificationService;
             _logger = logger;
         }
 
@@ -318,6 +322,74 @@ namespace BlazorApp.Services.PartnerCard
 
             if (visitDate > DateTime.Today)
                 throw new ArgumentException("방문일자는 오늘 이후로 설정할 수 없습니다.", nameof(historyDto));
+        }
+
+        public async Task<string> StorImageUploadAsync(IBrowserFile imageFile, int imageSlot, string opticianId)
+        {
+            try
+            {
+                if (imageFile == null)
+                    throw new ArgumentNullException(nameof(imageFile));
+
+                // Multipart 요청 생성
+                using var content = new MultipartFormDataContent();
+                content.Add(new StringContent(imageSlot.ToString()), "ImageSlot");
+                content.Add(new StringContent(opticianId), "OpticianId");
+
+                var fileContent = new StreamContent(imageFile.OpenReadStream(10 * 1024 * 1024));
+                content.Add(fileContent, "ImageFile", imageFile.Name);
+
+                // 서버 요청
+                var response = await _httpClient.PostAsync("/api/partnercard/upload-image", content);
+                if (response.IsSuccessStatusCode)
+                {
+                    var apiResponse = await _apiResponseHandler.HandleResponseAsync<string>(response);
+                    _logger.LogInformation("이미지 업로드 완료: FileName={FileName}", imageFile.Name);
+                    _notificationService.ShowSuccess($"파일 '{imageFile.Name}'이 성공적으로 업로드되었습니다.");
+                    return apiResponse?.Data ?? string.Empty;
+                }
+
+                var errorMessage = await _apiResponseHandler.ExtractErrorMessageAsync(response);
+                _notificationService.ShowError($"파일 '{imageFile.Name}' 업로드 실패: {errorMessage}");
+                throw new HttpRequestException($"이미지 업로드 실패: {errorMessage}");
+            }
+            catch (Exception ex)
+            {
+                _notificationService.ShowError($"파일 '{imageFile.Name}' 업로드 중 오류가 발생했습니다.");
+                _logger.LogError(ex, "이미지 업로드 중 오류 발생: FileName={FileName}", imageFile.Name);
+                throw;
+            }
+        }
+
+        public async Task<bool> StoreImageDeleteAsync(int imageSlot, string opticianId)
+        {
+            try
+            {
+                // Multipart 요청 생성
+                using var content = new MultipartFormDataContent();
+                content.Add(new StringContent(imageSlot.ToString()), "ImageSlot");
+                content.Add(new StringContent(opticianId), "OpticianId");
+                
+                // 서버 요청
+                var response = await _httpClient.PostAsync("/api/partnercard/delete-image", content);
+                if (response.IsSuccessStatusCode)
+                {
+                    var apiResponse = await _apiResponseHandler.HandleResponseAsync<string>(response);
+                    _logger.LogInformation($"이미지 삭제 완료: opticianId={opticianId}, imageSlot={imageSlot}");
+                    _notificationService.ShowSuccess($"{imageSlot}번째 이미지가 삭제되었습니다.");
+                    return true;
+                }
+
+                var errorMessage = await _apiResponseHandler.ExtractErrorMessageAsync(response);
+                _notificationService.ShowError($"{imageSlot}번재 이미지 삭제가 실패하였습니다.");
+                throw new HttpRequestException($"이미지 삭제 실패: {errorMessage}");
+            }
+            catch (Exception ex)
+            {
+                _notificationService.ShowError($"{imageSlot}번재 이미지 삭제 중 오류 발생.");
+                _logger.LogError(ex, $"이미지 삭제 중 오류 발생: imageSlot={imageSlot}");
+                throw;
+            }
         }
     }
 }

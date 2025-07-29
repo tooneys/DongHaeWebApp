@@ -154,4 +154,11 @@ namespace WebApi.Models
         public string TX_CLAIM { get; set; } = string.Empty;
         public string TX_CONTENTS { get; set; } = string.Empty;
     }
+
+    public class OpticianStoreImage
+    {
+        public string OpticianId { get; set; } = string.Empty;
+        public int ImageSlot { get; set; }
+        public string? ImageUrl { get; set; } = string.Empty;
+    }
 }

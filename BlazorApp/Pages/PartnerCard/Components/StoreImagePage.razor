@@ -1,9 +1,12 @@
-﻿<MudStack Row Spacing="4" Class="mb-6" Justify="Justify.SpaceEvenly">
+﻿@using BlazorApp.Services.PartnerCard
+@inject IPartnerCardClientService PartnerCardService
+@inject HttpClient Http
+
+<MudStack Row Spacing="4" Class="mb-6" Justify="Justify.SpaceEvenly">
     <MudPaper Elevation="2" Width="300px" Height="300px" Class="d-flex flex-column align-items-center justify-content-center pa-4" Style="border-radius: 12px; border: 2px dashed #e0e0e0;">
         @if (!string.IsNullOrEmpty(Data.Optician.Image1Url))
         {
-            <MudImage Src="@Data.Optician.Image1Url" Alt="이미지 1" Width="200" Height="200" ObjectFit="ObjectFit.Cover" Style="border-radius: 8px;" />
-            <p>@Data.Optician.Image1Url</p>
+            <MudImage Src="@GetFullImageUrl(Data.Optician.Image1Url)" Alt="이미지 1" Width="200" Height="200" ObjectFit="ObjectFit.Cover" Style="border-radius: 8px;" />
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveImage(1)" Class="mt-2" Size="Size.Small" />
         }
         else
@@ -22,7 +25,7 @@
     <MudPaper Elevation="2" Width="300px" Height="300px" Class="d-flex flex-column align-items-center justify-content-center pa-4" Style="border-radius: 12px; border: 2px dashed #e0e0e0;">
         @if (!string.IsNullOrEmpty(Data.Optician.Image2Url))
         {
-            <MudImage Src="@Data.Optician.Image2Url" Alt="이미지 2" Width="200" Height="200" ObjectFit="ObjectFit.Cover" Style="border-radius: 8px;" />
+            <MudImage Src="@GetFullImageUrl(Data.Optician.Image2Url)" Alt="이미지 2" Width="200" Height="200" ObjectFit="ObjectFit.Cover" Style="border-radius: 8px;" />
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveImage(2)" Class="mt-2" Size="Size.Small" />
         }
         else
@@ -41,7 +44,7 @@
     <MudPaper Elevation="2" Width="300px" Height="300px" Class="d-flex flex-column align-items-center justify-content-center pa-4" Style="border-radius: 12px; border: 2px dashed #e0e0e0;">
         @if (!string.IsNullOrEmpty(Data.Optician.Image3Url))
         {
-            <MudImage Src="@Data.Optician.Image3Url" Alt="이미지 3" Width="200" Height="200" ObjectFit="ObjectFit.Cover" Style="border-radius: 8px;" />
+            <MudImage Src="@GetFullImageUrl(Data.Optician.Image3Url)" Alt="이미지 3" Width="200" Height="200" ObjectFit="ObjectFit.Cover" Style="border-radius: 8px;" />
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveImage(3)" Class="mt-2" Size="Size.Small" />
         }
         else
@@ -68,38 +71,34 @@
 
     private async Task RemoveImage(int imageSlot)
     {
-        switch (imageSlot)
-        {
-            case 1:
-                Data.Optician.Image1Url = string.Empty;
-                break;
-            case 2:
-                Data.Optician.Image2Url = string.Empty;
-                break;
-            case 3:
-                Data.Optician.Image3Url = string.Empty;
-                break;
-        }
+        var result = await DeleteImageAsync(imageSlot);
 
-        await DataChanged.InvokeAsync(Data);
-        StateHasChanged();
+        if (result)
+        {
+            switch (imageSlot)
+            {
+                case 1:
+                    Data.Optician.Image1Url = string.Empty;
+                    break;
+                case 2:
+                    Data.Optician.Image2Url = string.Empty;
+                    break;
+                case 3:
+                    Data.Optician.Image3Url = string.Empty;
+                    break;
+            }
+
+            await DataChanged.InvokeAsync(Data);
+            StateHasChanged();
+        }
     }
 
     private async Task OnImageUpload(IBrowserFile file, int imageSlot)
     {
-        // 파일 크기 체크 (5MB)
-        if (file.Size > 5242880)
-        {
-            // 에러 처리
-            return;
-        }
-
         // 이미지 업로드 처리 로직
         try
         {
-            using var stream = file.OpenReadStream(5242880);
-            // 여기서 실제 파일 업로드 서비스 호출
-            var imageUrl = await UploadImageAsync(stream, file.Name);
+            var imageUrl = await UploadImageAsync(file, imageSlot);
 
             switch (imageSlot)
             {
@@ -124,11 +123,46 @@
         }
     }
 
-    private async Task<string> UploadImageAsync(Stream stream, string fileName)
+    private async Task<string> UploadImageAsync(IBrowserFile file, int imageSlot)
     {
-        // 실제 이미지 업로드 로직 구현
-        // 예: Azure Blob Storage, AWS S3, 로컬 서버 등
-        await Task.Delay(1000); // 시뮬레이션
-        return $"/images/{Guid.NewGuid()}-{fileName}";
+        try
+        {
+            var opticianId = Data.Optician.Id;
+            var ImageUrl = await PartnerCardService.StorImageUploadAsync(file, imageSlot, opticianId);
+
+            return ImageUrl;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"이미지 업로드 중 오류 발생: {ex.Message}");
+            throw;
+        }
+    }
+
+    private async Task<bool> DeleteImageAsync(int imageSlot)
+    {
+        try
+        {
+            var opticianId = Data.Optician.Id;
+            return await PartnerCardService.StoreImageDeleteAsync(imageSlot, opticianId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"이미지 삭제 중 오류 발생: {ex.Message}");
+            throw;
+        }
+    }
+
+    private string GetFullImageUrl(string imageUrl)
+    {
+        if (string.IsNullOrEmpty(imageUrl))
+            return string.Empty;
+
+        // 이미 전체 URL인 경우
+        if (imageUrl.StartsWith("http"))
+            return imageUrl;
+
+        // 상대 경로인 경우 기본 URL 추가
+        return $"{Http.BaseAddress?.ToString().TrimEnd('/')}{imageUrl}";
     }
 }

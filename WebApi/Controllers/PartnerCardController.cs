@@ -4,6 +4,7 @@ using WebApi.DTOs;
 using WebApi.Models;
 using WebApi.Services.Common;
 using WebApi.Services.PartnerCard;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace WebApi.Controllers
 {
@@ -498,6 +499,129 @@ namespace WebApi.Controllers
             {
                 _logger.LogError(ex, $"판촉물 추가 중 오류 발생 : OpticianId : {dto.OpticianId}, Promotion : {dto.Promotion}");
                 return StatusCode(500, new ApiErrorResponse("판촉물 추가 중 오류가 발생했습니다.", "INTERNAL_ERROR", ex.Message));
+            }
+        }
+
+        [HttpPost("upload-image")]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> StoreImageUpload([FromForm] StoreImageInsertDTO dto)
+        {
+            try
+            {
+                _logger.LogInformation($"매장 이미지 추가 시작: Slot={dto.ImageSlot}");
+
+                // 1. 기본 유효성 검증
+                var validationResult = ValidateStoreImage(dto);
+                if (validationResult != null)
+                    return validationResult;
+
+                // 2. 이미지 등록
+                if (dto.ImageFile == null || dto.ImageFile.Length == 0)
+                {
+                    return BadRequest(new ApiErrorResponse("이미지 파일이 필요합니다.", "VALIDATION_ERROR"));
+                }
+                // 이미지 처리 서비스 호출
+                var (imageUrl, resizedImage) = await _imageService.ProcessImageAsync(dto.ImageFile, "store");
+
+                // 3. 데이터베이스에 이미지 정보 저장
+                var storeImage = new OpticianStoreImage
+                {
+                    OpticianId = dto.OpticianId,
+                    ImageSlot = dto.ImageSlot,
+                    ImageUrl = imageUrl
+                };
+                await _partnerCardService.UpdateOpticianStoreImage(storeImage);
+
+                return Ok(new ApiResponse<string>
+                {
+                    Message = "매장 이미지가 성공적으로 추가되었습니다.",
+                    Data = imageUrl,
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "이미지 업로드 중 오류 발생: ImageSlot={ImageSlot}", dto.ImageSlot);
+                return StatusCode(500, new ApiErrorResponse(
+                    "이미지 업로드 중 오류가 발생했습니다.",
+                    "INTERNAL_ERROR",
+                    ex.Message));
+
+            }
+        }
+
+        private IActionResult ValidateStoreImage(StoreImageInsertDTO storeImage)
+        {
+            if (string.IsNullOrWhiteSpace(storeImage.OpticianId))
+                return BadRequest(new ApiErrorResponse("안경원은 필수입니다.", "VALIDATION_ERROR"));
+
+            if (storeImage.ImageFile != null && storeImage.ImageFile.Length > 10 * 1024 * 1024)
+                return BadRequest(new ApiErrorResponse("이미지 크기는 10MB를 초과할 수 없습니다.", "VALIDATION_ERROR"));
+
+            return null; // 검증 통과
+        }
+
+
+        [HttpPost("delete-image")]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> StoreImageDelete([FromForm] StoreImageDeleteDTO dto)
+        {
+            try
+            {
+                _logger.LogInformation($"매장 이미지 삭제 시작: Slot={dto.ImageSlot}");
+
+                // 1. 안경원정보 조회
+                var Optician = await _commonService.GetOpticiansByIdAsync(dto.OpticianId);
+                if (Optician == null)
+                {
+                    return NotFound(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "안경원 데이터를 찾을 수 없습니다."
+                    });
+                }
+
+                // 2. 이미지 삭제
+                if (dto.ImageSlot == 1)
+                {
+                    await _imageService.DeleteImageAsync(Optician.Image1Url);
+                }
+                else if (dto.ImageSlot == 2)
+                {
+                    await _imageService.DeleteImageAsync(Optician.Image2Url);
+                }
+                else if (dto.ImageSlot == 3)
+                {
+                    await _imageService.DeleteImageAsync(Optician.Image3Url);
+                }
+
+                // 3. 데이터베이스에 이미지 정보 저장
+                var storeImage = new OpticianStoreImage
+                {
+                    OpticianId = dto.OpticianId,
+                    ImageSlot = dto.ImageSlot,
+                    ImageUrl = null,
+                };
+                await _partnerCardService.UpdateOpticianStoreImage(storeImage);
+
+                // 결과 반환
+                return Ok(new ApiResponse<string>
+                {
+                    Success = true,
+                    Message = "매장 이미지가 성공적으로 삭제되었습니다.",
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "이미지 업로드 중 오류 발생: ImageSlot={ImageSlot}", dto.ImageSlot);
+                return StatusCode(500, new ApiErrorResponse(
+                    "이미지 업로드 중 오류가 발생했습니다.",
+                    "INTERNAL_ERROR",
+                    ex.Message));
+
             }
         }
     }

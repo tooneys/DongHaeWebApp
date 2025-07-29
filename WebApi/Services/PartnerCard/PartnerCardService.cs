@@ -417,5 +417,34 @@ namespace WebApi.Services.PartnerCard
                 throw;
             }
         }
+
+        public async Task UpdateOpticianStoreImage(OpticianStoreImage storeImage)
+        {
+            try
+            {
+                _logger.LogInformation($"매장이미지 데이터베이스 저장 시작: OpticianId={storeImage.OpticianId}");
+
+                using var connection = _connectionFactory.CreateConnection();
+
+                var parameters = new DynamicParameters();
+                parameters.Add("@CD_CORP", "01", DbType.String);
+                parameters.Add("@CD_CUST", storeImage.OpticianId, DbType.String);
+                parameters.Add("@Slot", storeImage.ImageSlot);
+                parameters.Add("@ImageUrl", storeImage.ImageUrl, DbType.String);
+
+                await connection.ExecuteAsync(
+                    "SP_BSCT_CUST_IMG_U",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+
+                _logger.LogInformation($"매장이미지 데이터베이스 저장 완료: OpticianId={storeImage.OpticianId}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"매장이미지 데이터베이스 저장 중 오류: OpticianId={storeImage.OpticianId}");
+                throw;
+            }
+        }
     }
 }
