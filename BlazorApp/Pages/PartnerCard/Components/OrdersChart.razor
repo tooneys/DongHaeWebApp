@@ -1,0 +1,57 @@
+﻿<MudPaper Class="doc-section-component-container">
+    <MudChart 
+            ChartType="ChartType.Line" 
+            ChartSeries="@_series" 
+            @bind-SelectedIndex="_index" 
+            XAxisLabels="@_xAxisLabels" 
+            Width="@_width" 
+            Height="@_height" 
+            ChartOptions="@_options" 
+            AxisChartOptions="_axisChartOptions"
+            />
+</MudPaper>
+
+@code {
+    [Parameter]
+    public List<OrderDto> Data { get; set; } = new List<OrderDto>();
+
+    private int _index = -1;
+    private ChartOptions _options = new ChartOptions();
+    private AxisChartOptions _axisChartOptions = new AxisChartOptions();
+    private string _width = "100%";
+    private string _height = "300px";
+    private string[] _xAxisLabels = { "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월" };
+    private List<ChartSeries> _series = new List<ChartSeries>();
+
+    protected override void OnInitialized()
+    {
+        if (Data != null && Data.Count > 0)
+        {
+            _series =  Data.Select(order => new ChartSeries
+            {
+                Name = order.NM_GUBUN,
+                Data = new double[]
+                {
+                    Convert.ToDouble(order.AM_MON01),
+                    Convert.ToDouble(order.AM_MON02),
+                    Convert.ToDouble(order.AM_MON03),
+                    Convert.ToDouble(order.AM_MON04),
+                    Convert.ToDouble(order.AM_MON05),
+                    Convert.ToDouble(order.AM_MON06),
+                    Convert.ToDouble(order.AM_MON07),
+                    Convert.ToDouble(order.AM_MON08),
+                    Convert.ToDouble(order.AM_MON09),
+                    Convert.ToDouble(order.AM_MON10),
+                    Convert.ToDouble(order.AM_MON11),
+                    Convert.ToDouble(order.AM_MON12),
+                },
+                ShowDataMarkers = true,
+            }).ToList();
+        }
+
+        // chart Option
+        _options.YAxisTicks = 100000;
+
+        StateHasChanged();
+    }
+}

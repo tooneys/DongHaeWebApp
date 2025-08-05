@@ -2,7 +2,7 @@
 
 @using BlazorApp.Models
 
-<MudCard Elevation="3" Class="pa-4">
+<MudCard Elevation="3" Class="pa-4 mb-2">
     <MudCardHeader>
         <MudText Typo="Typo.h6" Color="Color.Primary">매출 내역</MudText>
     </MudCardHeader>
@@ -20,7 +20,7 @@
         }
         else
         {
-            <MudTable Items="@Data" Height="400px" FixedHeader="true" HorizontalScrollbar="true" Hover="true" Elevation="0">
+            <MudTable Items="@Data" Height="200px" FixedHeader="true" HorizontalScrollbar="true" Hover="true" Elevation="0">
                 <HeaderContent>
                     <MudTh>구분</MudTh>
                     <MudTh>1월</MudTh>
