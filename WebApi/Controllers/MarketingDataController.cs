@@ -43,7 +43,7 @@ namespace WebApi.Controllers
                     });
                 }
 
-                var data = new MarketingData { Name = dto.Name };
+                var data = new MarketingData { Name = dto.Name, TabTape = dto.TabType, Description = dto.Description };
 
                 // 파일 업로드 (상대 경로로 저장)
                 if (dto.CoverImage != null)
@@ -218,6 +218,8 @@ namespace WebApi.Controllers
             {
                 Id = data.Id,
                 Name = data.Name,
+                TabType = data.TabTape,
+                Description = data.Description,
                 CoverImageUrl = _fileUploadService.GetFullUrl(data.CoverImageUrl), // 전체 URL로 변환
                 DownloadFileUrl = _fileUploadService.GetFullUrl(data.DownloadFileUrl), // 전체 URL로 변환
                 CreatedDate = data.CreatedDate,
