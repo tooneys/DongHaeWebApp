@@ -16,7 +16,7 @@
         private readonly ILogger<FileUploadService> _logger;
 
         private readonly string[] _allowedImageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
-        private readonly string[] _allowedDocumentExtensions = { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt" };
+        private readonly string[] _allowedDocumentExtensions = { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".zip" };
         private readonly long _maxFileSize = 10 * 1024 * 1024; // 10MB
 
         public FileUploadService(

@@ -35,9 +35,10 @@ namespace WebApi.Repositories
 
                 var parameters = new
                 {
-                    Name = data.Name,
-                    CoverImageUrl = data.CoverImageUrl,
-                    DownloadFileUrl = data.DownloadFileUrl
+                    data.Name,
+                    data.Description,
+                    data.CoverImageUrl,
+                    data.DownloadFileUrl,
                 };
 
                 var result = await connection.QuerySingleAsync<int>(
@@ -104,10 +105,10 @@ namespace WebApi.Repositories
 
                 var parameters = new
                 {
-                    Id = data.Id,
-                    Name = data.Name,
-                    CoverImageUrl = data.CoverImageUrl,
-                    DownloadFileUrl = data.DownloadFileUrl
+                    data.Id,
+                    data.Name,
+                    data.CoverImageUrl,
+                    data.DownloadFileUrl
                 };
 
                 var affectedRows = await connection.ExecuteAsync(

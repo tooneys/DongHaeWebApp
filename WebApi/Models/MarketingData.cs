@@ -10,6 +10,8 @@ namespace WebApi.Models
         [StringLength(255, ErrorMessage = "자료명은 255자를 초과할 수 없습니다.")]
         public string Name { get; set; } = string.Empty;
 
+        public string Description { get; set; } = string.Empty;
+
         [StringLength(500, ErrorMessage = "표지 이미지 URL은 500자를 초과할 수 없습니다.")]
         public string? CoverImageUrl { get; set; }
 

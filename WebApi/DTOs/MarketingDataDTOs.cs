@@ -7,7 +7,9 @@ namespace WebApi.DTOs
         [Required(ErrorMessage = "자료명은 필수입니다.")]
         [StringLength(255, ErrorMessage = "자료명은 255자를 초과할 수 없습니다.")]
         public string Name { get; set; } = string.Empty;
-        
+
+        public string Description { get; set; } = string.Empty;
+
         public IFormFile? CoverImage { get; set; }
         
         public IFormFile? DownloadFile { get; set; }
@@ -31,7 +33,9 @@ namespace WebApi.DTOs
         public int Id { get; set; }
         
         public string Name { get; set; } = string.Empty;
-        
+
+        public string Description { get; set; } = string.Empty;
+
         public string? CoverImageUrl { get; set; }
         
         public string? DownloadFileUrl { get; set; }
