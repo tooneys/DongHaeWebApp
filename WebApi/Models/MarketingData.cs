@@ -21,7 +21,7 @@ namespace WebApi.Models
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
 
-        public string TabTape { get; set; } = string.Empty;
-        public string TabTapeName { get; set; } = string.Empty;
+        public string TabType { get; set; } = string.Empty;
+        public string TabTypeName { get; set; } = string.Empty;
     }
 }

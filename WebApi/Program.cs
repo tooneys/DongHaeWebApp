@@ -57,24 +57,49 @@ try
 
     builder.Services.AddCors(options =>
     {
-        options.AddDefaultPolicy(policy =>
+        options.AddPolicy("DevelopmentCors", policy =>
         {
-            if (builder.Environment.IsDevelopment())
-            {
-                policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
-            }
-            else
-            {
-                policy.WithOrigins(
-                            "https://sales.donghaelens.com",
-                            "https://api.donghaelens.com"
-                      )
-                      .AllowAnyHeader()
-                      .AllowAnyMethod()
-                      .AllowCredentials();
-            }
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+
+        options.AddPolicy("ProductionCors", policy =>
+        {
+            policy.WithOrigins(
+                    "https://order.donghaelens.com",
+                    "https://sales.donghaelens.com",
+                    "https://api.donghaelens.com",
+                    "https://localhost:7240"
+                )
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
         });
     });
+
+    //builder.Services.AddCors(options =>
+    //{
+    //    options.AddDefaultPolicy(policy =>
+    //    {
+    //        if (builder.Environment.IsDevelopment())
+    //        {
+    //            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    //        }
+    //        else
+    //        {
+    //            policy.WithOrigins(
+    //                        "https://order.donghaelens.com",
+    //                        "https://sales.donghaelens.com",
+    //                        "https://api.donghaelens.com",
+    //                        "https://localhost:7240"
+    //                  )
+    //                  .AllowAnyHeader()
+    //                  .AllowAnyMethod()
+    //                  .AllowCredentials();
+    //        }
+    //    });
+    //});
 
     // 파일 업로드 크기 제한 설정
     builder.Services.Configure<FormOptions>(options =>
@@ -90,11 +115,13 @@ try
         app.UseDeveloperExceptionPage();
         app.UseSwagger();
         app.UseSwaggerUI();
+        app.UseCors("DevelopmentCors");
     }
     else if (app.Environment.IsProduction())
     {
         app.UseExceptionHandler("/Error");
         app.UseHsts();
+        app.UseCors("ProductionCors");
     }
 
     // 업로드 디렉토리 생성 확인
@@ -113,7 +140,7 @@ try
     });
 
     app.UseHttpsRedirection();
-    app.UseCors();
+    //app.UseCors();
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();

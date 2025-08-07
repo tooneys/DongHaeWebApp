@@ -8,8 +8,10 @@ namespace WebApi.DTOs
         [StringLength(255, ErrorMessage = "자료명은 255자를 초과할 수 없습니다.")]
         public string Name { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "탭구분은 필수입니다.")]
         public string TabType { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "설명은 필수입니다.")]
         public string Description { get; set; } = string.Empty;
 
         public IFormFile? CoverImage { get; set; }
@@ -22,6 +24,12 @@ namespace WebApi.DTOs
         [Required(ErrorMessage = "자료명은 필수입니다.")]
         [StringLength(255, ErrorMessage = "자료명은 255자를 초과할 수 없습니다.")]
         public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "탭구분은 필수입니다.")]
+        public string TabType { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "설명은 필수입니다.")]
+        public string Description { get; set; } = string.Empty;
 
         [StringLength(500, ErrorMessage = "표지 이미지 URL은 500자를 초과할 수 없습니다.")]
         public string? CoverImageUrl { get; set; }

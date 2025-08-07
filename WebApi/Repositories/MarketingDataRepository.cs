@@ -36,7 +36,7 @@ namespace WebApi.Repositories
                 var parameters = new
                 {
                     data.Name,
-                    data.TabTape,
+                    data.TabType,
                     data.Description,
                     data.CoverImageUrl,
                     data.DownloadFileUrl,
@@ -108,7 +108,7 @@ namespace WebApi.Repositories
                 {
                     data.Id,
                     data.Name,
-                    data.TabTape,
+                    data.TabType,
                     data.Description,
                     data.CoverImageUrl,
                     data.DownloadFileUrl
