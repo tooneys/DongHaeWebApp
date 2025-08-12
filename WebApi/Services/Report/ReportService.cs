@@ -52,7 +52,7 @@ namespace WebApi.Services.Report
                 parameters.Add("@CD_BUSIDIV", "001", DbType.String);
                 parameters.Add("@DT_COMP_F", startDate.ToString("yyyyMMdd"), DbType.String);
                 parameters.Add("@DT_COMP_T", endDate.ToString("yyyyMMdd"), DbType.String);
-                parameters.Add("@CD_EMP", "0038", DbType.String);
+                parameters.Add("@CD_EMP", "", DbType.String);
                 parameters.Add("@CD_CUST", "", DbType.String);
                 parameters.Add("@NM_CUST", "", DbType.String);
                 parameters.Add("@OP_GUBUN", searchType, DbType.Int32);

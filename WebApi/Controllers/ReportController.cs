@@ -54,6 +54,10 @@ namespace WebApi.Controllers
             if (!string.IsNullOrEmpty(customer))
                 records = records.Where(r => r["안경원"].ToString()?.Contains(customer) ?? false).ToList();
 
+            // 담당자 필터
+            if (!string.IsNullOrEmpty(manager))
+                records = records.Where(r => r["담당자"].ToString()?.Contains(manager) ?? false).ToList();
+
             return Ok(new
             {
                 columns,

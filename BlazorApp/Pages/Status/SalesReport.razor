@@ -27,7 +27,7 @@
             <MudTextField Label="거래처" @bind-Value="customer" />
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
-            <MudTextField Label="담당자" @bind-Value="manager" Disabled />
+            <MudTextField Label="담당자" @bind-Value="manager" Disabled="@isDisable" />
         </MudItem>
         <MudItem xs="12">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadData">검색</MudButton>
@@ -62,16 +62,33 @@
             <tfoot>
                 <tr>
                     <td colspan="2">합계</td>
-                    @foreach (var col in columns.Skip(2).Take(columns.Count - 3))
+                    @for (int i = 2; i < columns.Count - 3; i++)  // 마지막 열(예: 등급 담당자 코드여부)은 합산 제외
                     {
-                        var total = rows.Sum(r =>
-                        r.TryGetValue(col.field, out var val) && val is IConvertible
-                        ? Convert.ToDecimal(val) : 0m);
+                        var col = columns[i];
+                        decimal total = rows.Sum(r =>
+                        {
+                            if (r.TryGetValue(col.field, out var val))
+                            {
+                                if (val is JsonElement je)
+                                {
+                                    if (je.ValueKind == JsonValueKind.Number && je.TryGetDecimal(out var dec))
+                                        return dec;
+                                }
+                                else if (val is IConvertible)
+                                {
+                                    try { return Convert.ToDecimal(val); } catch { }
+                                }
+                            }
+                            return 0m;
+                        });
                         <td>@total.ToString("N0")</td>
                     }
                     <td></td>
+                    <td></td>
+                    <td></td>
                 </tr>
             </tfoot>
+
         </table>
     </div>
 }
@@ -95,17 +112,24 @@ else
     string? managerCode;
     string? manager;
 
+    bool isAdmin = true;
+    bool isDisable => !isAdmin;
+
     protected override async Task OnInitializedAsync()
     {
         var userProfile = await localStorageService.GetItemAsync<UserProfile>("userProfile");
+        isAdmin = userProfile?.IsAdmin ?? false;
 
-        managerCode = userProfile?.UserId ?? string.Empty;
-        manager = userProfile?.Username ?? string.Empty;
+        if (!isAdmin)
+        {
+            managerCode = userProfile?.UserId ?? string.Empty;
+            manager = userProfile?.Username ?? string.Empty;
+        }
     }
 
     private async Task LoadData()
     {
-        var url = $"api/report/sales?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}&type={searchType}&customer={customer}&manager={managerCode}";
+        var url = $"api/report/sales?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}&type={searchType}&customer={customer}&manager={manager}";
         var result = await Http.GetFromJsonAsync<ApiResult>(url);
         if (result != null)
         {
