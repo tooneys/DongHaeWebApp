@@ -85,13 +85,6 @@ namespace BlazorApp.Services
             {
                 _logger.LogInformation("차량일지 작성 시작");
 
-                // 로그인한 사원번호 입력
-                var userProfile = await _localStorageService.GetItemAsync<UserProfile>("userProfile");
-                var empCode = userProfile!.UserId;
-
-                // 차량 정보에 사원번호 설정
-                vehicle.CD_EMP = empCode;
-
                 ValidateVehicle(vehicle);
 
                 var response = await _httpClient.PostAsJsonAsync("api/vehicle", vehicle);

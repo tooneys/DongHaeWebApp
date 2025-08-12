@@ -112,14 +112,14 @@
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public Vehicle? Vehicle { get; set; }
+    [Parameter] public bool IsEdit { get; set; }
 
     private Vehicle vehicle = new();
     private bool isSubmitting = false;
-    private bool IsEdit => Vehicle != null;
 
     protected override void OnInitialized()
     {
-        if (IsEdit && Vehicle != null)
+        if (Vehicle != null)
         {
             // 수정 모드: 기존 데이터 복사
             vehicle = new Vehicle

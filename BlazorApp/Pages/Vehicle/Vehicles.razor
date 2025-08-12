@@ -3,6 +3,7 @@
 @inject IVehicleClientService vehicleClientService
 @inject IDialogService DialogService
 @inject INotificationService Snackbar
+@inject ILocalStorageService LocalStorage
 
 <PageTitle>차량일지 관리</PageTitle>
 
@@ -31,6 +32,7 @@
                     <Columns>
                         <PropertyColumn Property="x => x.DT_COMP" Title="등록일자" Sortable="true">
                             <CellTemplate>
+                                <MudText>@context.Item.SEQ</MudText>
                                 <MudText>@context.Item.DT_COMP?.ToString("yyyy-MM-dd")</MudText>
                             </CellTemplate>
                         </PropertyColumn>
@@ -105,7 +107,26 @@
 
     private async Task OpenCreateDialog()
     {
+        // 사용자 프로필 정보 가져오기
+        var userProfile = await LocalStorage.GetItemAsync<UserProfile>("userProfile");
+
+        // 최종 주행거리 정보 가져오기
+        var lastVehicle = vehicles.OrderByDescending(v => v.SEQ).FirstOrDefault();
+
         var parameters = new DialogParameters();
+        parameters.Add("Vehicle", new Vehicle
+        {
+            DT_COMP = DateTime.Now,
+            CD_EMP = userProfile?.UserId ?? string.Empty,
+            NO_CAR = userProfile?.CarNumber ?? string.Empty,
+            TX_AREA = string.Empty,
+            VL_BEFORE = lastVehicle?.VL_AFTER ?? 0,
+            VL_AFTER = 0,
+            VL_DISTANCE = 0,
+            VL_FUEL = 0
+        });
+        parameters.Add("IsEdit", false);
+
         var options = new DialogOptions
             {
                 MaxWidth = MaxWidth.Large,
@@ -119,7 +140,6 @@
         if (!result.Canceled && result.Data is Vehicle newVehicle)
         {
             // TODO: API 호출로 등록
-            newVehicle.SEQ = vehicles.Count + 1;
             vehicles.Add(newVehicle);
             Snackbar.ShowSuccess("차량일지가 성공적으로 등록되었습니다.");
             StateHasChanged();
@@ -141,7 +161,7 @@
 
     private async Task OpenEditDialog(Vehicle vehicle)
     {
-        var parameters = new DialogParameters { ["Vehicle"] = vehicle };
+        var parameters = new DialogParameters { ["Vehicle"] = vehicle, ["IsEdit"] = true };
         var options = new DialogOptions
             {
                 MaxWidth = MaxWidth.Large,

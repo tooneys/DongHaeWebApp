@@ -107,7 +107,7 @@ namespace WebApi.Services.Vehicle
                     commandType: CommandType.StoredProcedure
                 );
 
-                _logger.LogInformation($"차량일지 데이터베이스 저장 완료: SEQ={vehicleDto.SEQ}");
+                _logger.LogInformation($"차량일지 데이터베이스 수정 완료: SEQ={vehicleDto.SEQ}");
 
                 return vehicleDto ?? new VehicleDto();
             }
