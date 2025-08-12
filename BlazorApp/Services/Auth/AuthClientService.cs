@@ -18,6 +18,7 @@ namespace BlazorApp.Services.Auth
 
         private const string TOKEN_KEY = "accessToken";
         private const string USER_KEY = "userProfile";
+        private const string SELECTEDEMPLOYEE_KEY = "selectedEmployeeCode";
 
         public AuthClientService(
             HttpClient httpClient,
@@ -174,6 +175,7 @@ namespace BlazorApp.Services.Auth
         {
             await _localStorage.RemoveItemAsync(TOKEN_KEY);
             await _localStorage.RemoveItemAsync(USER_KEY);
+            await _localStorage.RemoveItemAsync(SELECTEDEMPLOYEE_KEY);
         }
     }
 }

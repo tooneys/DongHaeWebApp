@@ -1,0 +1,173 @@
+﻿@page "/sales-report"
+
+@using System.Net.Http.Json
+@using System.Text.Json
+
+@inject HttpClient Http
+@inject ILocalStorageService localStorageService
+
+<MudPaper Class="pa-4 mb-2">
+    <!-- 검색 조건 영역 -->
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="2">
+            <MudDatePicker Label="시작일자" @bind-Date="startDate" ShowToolbar="false" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudDatePicker Label="종료일자" @bind-Date="endDate" ShowToolbar="false" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudSelect Label="조회구분" @bind-Value="searchType">
+                @foreach (var type in searchTypes)
+                {
+                    <MudSelectItem Value="type">@type</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudTextField Label="거래처" @bind-Value="customer" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudTextField Label="담당자" @bind-Value="manager" Disabled />
+        </MudItem>
+        <MudItem xs="12">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadData">검색</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (columns?.Any() == true)
+{
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    @foreach (var col in columns)
+                    {
+                        <th>@col.title</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                <Virtualize Items="@rows" Context="row" ItemSize="42">
+                    <ItemContent>
+                        <tr>
+                            @foreach (var col in columns)
+                            {
+                                <td>@(row.TryGetValue(col.field, out var val) ? FormatValue(val) : "")</td>
+                            }
+                        </tr>
+                    </ItemContent>
+                </Virtualize>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2">합계</td>
+                    @foreach (var col in columns.Skip(2).Take(columns.Count - 3))
+                    {
+                        var total = rows.Sum(r =>
+                        r.TryGetValue(col.field, out var val) && val is IConvertible
+                        ? Convert.ToDecimal(val) : 0m);
+                        <td>@total.ToString("N0")</td>
+                    }
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+}
+else
+{
+    <div class="no-data">데이터가 없습니다.</div>
+}
+
+@code {
+    public record ColumnDef(string field, string title);
+
+    List<ColumnDef> columns = new();
+    List<Dictionary<string, object>> rows = new();
+
+    DateTime? startDate = new DateTime(2025, 7, 1);
+    DateTime? endDate = new DateTime(2025, 9, 1);
+
+    string searchType = "전체";
+    private readonly string[] searchTypes = { "전체", "매출", "입금", "잔액" };
+    string? customer;
+    string? managerCode;
+    string? manager;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userProfile = await localStorageService.GetItemAsync<UserProfile>("userProfile");
+
+        managerCode = userProfile?.UserId ?? string.Empty;
+        manager = userProfile?.Username ?? string.Empty;
+    }
+
+    private async Task LoadData()
+    {
+        var url = $"api/report/sales?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}&type={searchType}&customer={customer}&manager={managerCode}";
+        var result = await Http.GetFromJsonAsync<ApiResult>(url);
+        if (result != null)
+        {
+            columns = result.columns;
+            rows = result.rows;
+        }
+    }
+
+    public class ApiResult
+    {
+        public List<ColumnDef> columns { get; set; } = new();
+        public List<Dictionary<string, object>> rows { get; set; } = new();
+    }
+
+    private string FormatValue(object? value)
+    {
+        if (value is null)
+            return string.Empty;
+
+        // 1. JsonElement로 들어오는 경우 처리
+        if (value is JsonElement je)
+        {
+            // 숫자일 경우
+            if (je.ValueKind == JsonValueKind.Number)
+            {
+                if (je.TryGetDecimal(out var dec))
+                    return dec.ToString("N0");          // 천단위 구분
+                if (je.TryGetInt64(out var i64))
+                    return i64.ToString("N0");
+            }
+            // 문자열일 경우 (날짜 문자열 포함)
+            else if (je.ValueKind == JsonValueKind.String)
+            {
+                var str = je.GetString() ?? string.Empty;
+
+                if (DateTime.TryParse(str, out var dt))
+                    return dt.ToString("yyyy-MM-dd");
+
+                return str;
+            }
+        }
+
+        // 2. IConvertible 구현 타입 (int, long, double, decimal 등)
+        if (value is IConvertible)
+        {
+            try
+            {
+                var dec = Convert.ToDecimal(value);
+                return dec.ToString("N0");
+            }
+            catch
+            {
+                // 변환 실패하면 그냥 문자열 반환
+            }
+        }
+
+        // 3. DateTime 직접 매칭
+        if (value is DateTime dt2)
+            return dt2.ToString("yyyy-MM-dd");
+
+        // 4. 기본 문자열 출력
+        return value.ToString() ?? string.Empty;
+    }
+
+}

@@ -1,7 +1,7 @@
-﻿namespace WebApi.Models
+﻿namespace BlazorApp.Models
 {
-    public class CustomerSalesStatus 
-    { 
+    public class CustomerSalesStatusDto
+    {
         public string Code { get; set; }
         public string Name { get; set; } = string.Empty;
         public decimal PreviousYearAmount { get; set; }
@@ -11,5 +11,4 @@
         public string Category { get; set; }
         public string Grade { get; set; }
     }
-
 }
