@@ -49,7 +49,7 @@
                     For="@(() => vehicle.VL_BEFORE)"
                     Variant="Variant.Outlined"
                     Min="0"
-                    Format="N1"
+                    Format="N0"
                     @onchange="@(() => CalculateDistance())"
                     HelperText="운행 시작 시 계기판 수치" />
                 </MudItem>
@@ -60,7 +60,7 @@
                     For="@(() => vehicle.VL_AFTER)"
                     Variant="Variant.Outlined"
                     Min="0"
-                    Format="N1"
+                    Format="N0"
                     @onchange="@(() => CalculateDistance())"
                     HelperText="운행 종료 시 계기판 수치" />
                 </MudItem>
@@ -71,7 +71,7 @@
                     For="@(() => vehicle.VL_DISTANCE)"
                     Variant="Variant.Outlined"
                     ReadOnly="true"
-                    Format="N1"
+                    Format="N0"
                     HelperText="자동으로 계산됩니다"
                     Style="background-color: #f5f5f5;" />
                 </MudItem>

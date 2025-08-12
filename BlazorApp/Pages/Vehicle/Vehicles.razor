@@ -32,7 +32,6 @@
                     <Columns>
                         <PropertyColumn Property="x => x.DT_COMP" Title="등록일자" Sortable="true">
                             <CellTemplate>
-                                <MudText>@context.Item.SEQ</MudText>
                                 <MudText>@context.Item.DT_COMP?.ToString("yyyy-MM-dd")</MudText>
                             </CellTemplate>
                         </PropertyColumn>
