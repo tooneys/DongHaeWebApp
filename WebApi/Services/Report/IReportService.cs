@@ -18,5 +18,20 @@
             string? customer = null,
             string? manager = null
         );
+
+        /// <summary>
+        /// 계획별 주문현황 보고서를 생성합니다.
+        /// </summary>
+        /// <param name="searchMonth"></param>
+        /// <param name="manager"></param>
+        /// <param name="valueDiv"></param>
+        /// <param name="itemDiv"></param>
+        /// <returns>보고서 데이터</returns>
+        Task<IEnumerable<Dictionary<string, object>>> GenerateUserPlanReportAsync(
+            string searchMonth,
+            string manager,
+            string? valueDiv,
+            string? itemDiv
+        );
     }
 }

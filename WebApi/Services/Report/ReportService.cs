@@ -75,5 +75,60 @@ namespace WebApi.Services.Report
                 throw;
             }
         }
+
+        public async Task<IEnumerable<Dictionary<string, object>>> GenerateUserPlanReportAsync(
+            string searchMonth, 
+            string manager, 
+            string? valueDiv, 
+            string? itemDiv
+        )
+        {
+            try
+            {
+                using var connection = _connectionFactory.CreateConnection();
+
+                int valueDivCode = valueDiv switch
+                {
+                    "전체" => 0,
+                    "수량" => 1,
+                    "금액" => 2,
+                    _ => 0
+                };
+
+                string itemDivCode = itemDiv switch
+                {
+                    "전체" => "",
+                    "RX" => "001",
+                    "ST" => "002",
+                    "기타" => "003",
+                    _ => ""
+                };
+
+                // 파라미터 생성
+                var parameters = new DynamicParameters();
+                parameters.Add("@CD_CORP", "01", DbType.String);
+                parameters.Add("@CD_BUSIDIV", "001", DbType.String);
+                parameters.Add("@CD_EMP", "0065", DbType.String);
+                parameters.Add("@DT_YYYYMM", searchMonth, DbType.String);
+                parameters.Add("@CD_VALUEGB", valueDivCode, DbType.Int32);
+                parameters.Add("@CD_ITEMDIV", itemDivCode, DbType.String);
+
+                var response = await connection.QueryAsync(
+                    "SP_SMPL_USERPLAN_SV",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+
+                var records = response.Cast<IDictionary<string, object>>().Select(row => row.ToDictionary(k => k.Key, v => v.Value))
+                    .ToList();
+
+                return records ?? Enumerable.Empty<Dictionary<string, object>>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"계획별주문현황 조회 중 오류 발생: searchMonth={searchMonth}, manager={manager}");
+                throw;
+            }
+        }
     }
 }

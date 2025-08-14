@@ -1,4 +1,4 @@
-﻿@page "/sales-report"
+﻿@page "/userplan-report"
 @attribute [Authorize]
 
 @using System.Net.Http.Json
@@ -7,28 +7,33 @@
 @inject HttpClient Http
 @inject ILocalStorageService localStorageService
 
+
+<PageTitle>계획별 주문현황</PageTitle>
+
 <MudPaper Class="pa-4 mb-2">
     <!-- 검색 조건 영역 -->
     <MudGrid>
-        <MudItem xs="12" sm="6" md="2">
-            <MudDatePicker Label="시작일자" @bind-Date="startDate" ShowToolbar="false" />
+        <MudItem xs="12" sm="6" md="3">
+            <MudDatePicker Label="조회년월" @bind-Date="searchMonth" OpenTo="OpenTo.Month" FixDay="1" DateFormat="yyyy년 MM월" ShowToolbar="false" />
         </MudItem>
-        <MudItem xs="12" sm="6" md="2">
-            <MudDatePicker Label="종료일자" @bind-Date="endDate" ShowToolbar="false" />
-        </MudItem>
-        <MudItem xs="12" sm="6" md="2">
-            <MudSelect Label="조회구분" @bind-Value="searchType">
-                @foreach (var type in searchTypes)
+        <MudItem xs="12" sm="6" md="3">
+            <MudSelect Label="판매구분" @bind-Value="itemDiv">
+                @foreach (var data in itemDivs)
                 {
-                    <MudSelectItem Value="type">@type</MudSelectItem>
+                    <MudSelectItem Value="data">@data</MudSelectItem>
                 }
             </MudSelect>
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
-            <MudTextField Label="거래처" @bind-Value="customer" />
+            <MudSelect Label="수량/금액" @bind-Value="valueDiv">
+                @foreach (var data in valueDivs)
+                {
+                    <MudSelectItem Value="data">@data</MudSelectItem>
+                }
+            </MudSelect>
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
-            <MudTextField Label="담당자" @bind-Value="manager" Disabled="@isDisable" />
+            <MudTextField Label="담당자" @bind-Value="manager" Disabled />
         </MudItem>
         <MudItem xs="12">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadData">검색</MudButton>
@@ -104,34 +109,26 @@ else
     List<ColumnDef> columns = new();
     List<Dictionary<string, object>> rows = new();
 
-    // 기본값: 이번 달 1일부터 오늘까지
-    DateTime? startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-    DateTime? endDate = DateTime.Now;
+    string itemDiv = "전체";
+    private readonly string[] itemDivs = { "전체", "RX", "ST", "기타" };
 
-    string searchType = "전체";
-    private readonly string[] searchTypes = { "전체", "매출", "입금", "잔액" };
-    string? customer;
+    string valueDiv = "전체";
+    private readonly string[] valueDivs = { "전체", "수량", "금액" };
+
+    DateTime? searchMonth = DateTime.Now;
     string? managerCode;
     string? manager;
-
-    bool isAdmin = true;
-    bool isDisable => !isAdmin;
 
     protected override async Task OnInitializedAsync()
     {
         var userProfile = await localStorageService.GetItemAsync<UserProfile>("userProfile");
-        isAdmin = userProfile?.IsAdmin ?? false;
-
-        if (!isAdmin)
-        {
-            managerCode = userProfile?.UserId ?? string.Empty;
-            manager = userProfile?.Username ?? string.Empty;
-        }
+        managerCode = userProfile?.UserId ?? string.Empty;
+        manager = userProfile?.Username ?? string.Empty;
     }
 
     private async Task LoadData()
     {
-        var url = $"api/report/sales?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}&type={searchType}&customer={customer}&manager={manager}";
+        var url = $"api/report/userplan?searchMonth={searchMonth:yyyyMM}&manager={managerCode}&valueDiv={valueDiv}&itemDiv={itemDiv}";
         var result = await Http.GetFromJsonAsync<ApiResult>(url);
         if (result != null)
         {
@@ -139,7 +136,6 @@ else
             rows = result.rows;
         }
     }
-
     public class ApiResult
     {
         public List<ColumnDef> columns { get; set; } = new();
@@ -195,5 +191,4 @@ else
         // 4. 기본 문자열 출력
         return value.ToString() ?? string.Empty;
     }
-
 }

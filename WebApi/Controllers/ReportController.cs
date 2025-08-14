@@ -64,5 +64,47 @@ namespace WebApi.Controllers
                 rows = records
             });
         }
+
+        [HttpGet("userplan")]
+        public async Task<IActionResult> GetUserPlanReport(
+            string searchMonth,
+            string manager = "",
+            string? valueDiv = "",
+            string? itemDiv = ""
+        )
+        {
+            if (string.IsNullOrEmpty(searchMonth))
+            {
+                return BadRequest("검색 월이 지정되지 않았습니다.");
+            }
+
+            if (string.IsNullOrEmpty(manager))
+            {
+                return BadRequest("담당자가 지정되지 않았습니다.");
+            }
+
+            var records = await _reportService.GenerateUserPlanReportAsync(
+                searchMonth,
+                manager,
+                valueDiv,
+                itemDiv
+            );
+
+            // 컬럼 정의 동적 생성 (첫 행 기준)
+            var columns = new List<object>();
+            if (records.Any())
+            {
+                foreach (var key in records.First().Keys)
+                {
+                    columns.Add(new { field = key, title = key });
+                }
+            }
+
+            return Ok(new
+            {
+                columns,
+                rows = records
+            });
+        }
     }
 }
