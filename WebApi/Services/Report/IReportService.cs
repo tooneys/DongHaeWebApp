@@ -1,4 +1,6 @@
-﻿namespace WebApi.Services.Report
+﻿using WebApi.DTOs;
+
+namespace WebApi.Services.Report
 {
     public interface IReportService
     {
@@ -33,5 +35,17 @@
             string? valueDiv,
             string? itemDiv
         );
+
+        /// <summary>
+        /// 계획별 주문현황 보고서(달성율) 데이터를 가져옵니다.
+        /// </summary>
+        /// <param name="searchMonth"></param>
+        /// <param name="manager"></param>
+        /// <returns></returns>
+        Task<UserPlanTargetReportDto> GetUserPlanTargetReportAsync(
+            string searchMonth,
+            string manager = ""
+        );
+
     }
 }

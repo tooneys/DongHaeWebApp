@@ -6,6 +6,7 @@
 
 @inject HttpClient Http
 @inject ILocalStorageService localStorageService
+@inject IApiResponseHandler apiResponseHandler
 
 
 <PageTitle>계획별 주문현황</PageTitle>
@@ -43,7 +44,7 @@
 
 @if (columns?.Any() == true)
 {
-    <div class="table-container">
+    <div class="table-container mb-2">
         <table class="custom-table">
             <thead>
                 <tr>
@@ -103,6 +104,61 @@ else
     <div class="no-data">데이터가 없습니다.</div>
 }
 
+@if (userPlanTargetReport != null)
+{
+    <MudPaper Class="d-flex align-center justify-center mud-width-full py-4 pa-2">
+        <MudGrid>
+            <MudItem xs="3">
+                <MudField Label="타겟" Variant="Variant.Text">@userPlanTargetReport.am_target.ToString("n0")</MudField>
+            </MudItem>
+            <MudItem xs="3">
+                <MudField Label="전체합계" Variant="Variant.Text">@userPlanTargetReport.am_total.ToString("n0")</MudField>
+            </MudItem>
+            <MudItem xs="3">
+                <MudField Label="달성율" Variant="Variant.Text">@userPlanTargetReport.progress.ToString("n1")</MudField>
+            </MudItem>
+
+            <MudFlexBreak />
+
+            <MudItem xs="3">
+                <MudField Label="ST현재" Variant="Variant.Text">@userPlanTargetReport.am_order_st.ToString("n0")</MudField>
+            </MudItem>
+            <MudItem xs="3">
+                <MudField Label="ST추가" Variant="Variant.Text">@userPlanTargetReport.am_add_st.ToString("n0")</MudField>
+            </MudItem>
+            <MudItem xs="3">
+                <MudField Label="ST기타" Variant="Variant.Text">@userPlanTargetReport.am_etc_st.ToString("n0")</MudField>
+            </MudItem>
+            <MudItem xs="3">
+                <MudField Label="ST합계" Variant="Variant.Text">@userPlanTargetReport.am_total_st.ToString("n0")</MudField>
+            </MudItem>
+        
+            <MudFlexBreak />
+
+            <MudItem xs="3">
+                <MudField Label="RX현재" Variant="Variant.Text">@userPlanTargetReport.am_order_rx.ToString("n0")</MudField>
+            </MudItem>
+            <MudItem xs="3">
+                <MudField Label="RX추가" Variant="Variant.Text">@userPlanTargetReport.am_add_rx.ToString("n0")</MudField>
+            </MudItem>
+            <MudItem xs="3">
+                <MudField Label="RX기타" Variant="Variant.Text">@userPlanTargetReport.am_etc_rx.ToString("n0")</MudField>
+            </MudItem>
+            <MudItem xs="3">
+                <MudField Label="RX합계" Variant="Variant.Text">@userPlanTargetReport.am_order_rx.ToString("n0")</MudField>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudField Label="비고" Variant="Variant.Text">@userPlanTargetReport.am_order_rx.ToString("n0")</MudField>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+}
+else
+{
+    <div class="no-data">달성율 데이터가 없습니다.</div>
+}
+
 @code {
     public record ColumnDef(string field, string title);
 
@@ -119,6 +175,8 @@ else
     string? managerCode;
     string? manager;
 
+    UserPlanTargetReport? userPlanTargetReport;
+
     protected override async Task OnInitializedAsync()
     {
         var userProfile = await localStorageService.GetItemAsync<UserProfile>("userProfile");
@@ -128,6 +186,12 @@ else
 
     private async Task LoadData()
     {
+        await userplanDataLoad();
+        await userplanTargetDataLoad();
+    }
+
+    private async Task userplanDataLoad()
+    {
         var url = $"api/report/userplan?searchMonth={searchMonth:yyyyMM}&manager={managerCode}&valueDiv={valueDiv}&itemDiv={itemDiv}";
         var result = await Http.GetFromJsonAsync<ApiResult>(url);
         if (result != null)
@@ -136,6 +200,27 @@ else
             rows = result.rows;
         }
     }
+
+    private async Task userplanTargetDataLoad()
+    {
+        var url = $"api/report/userplan-target?searchMonth={searchMonth:yyyyMM}&manager={managerCode}";
+        var response = await Http.GetAsync(url);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await apiResponseHandler.HandleResponseAsync<UserPlanTargetReport>(response);
+
+            userPlanTargetReport = result?.Data;
+        }
+        else
+        {
+            var errorMessage = await apiResponseHandler.ExtractErrorMessageAsync(response);
+            Console.WriteLine($"Error loading user plan target data: {errorMessage}");
+            // 에러 처리 로직 추가 (예: 사용자에게 알림)
+            userPlanTargetReport = null;
+        }
+    }
+
     public class ApiResult
     {
         public List<ColumnDef> columns { get; set; } = new();

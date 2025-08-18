@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using WebApi.DTOs;
+using WebApi.Models;
 using WebApi.Services.Report;
 
 namespace WebApi.Controllers
@@ -105,6 +107,36 @@ namespace WebApi.Controllers
                 columns,
                 rows = records
             });
+        }
+
+
+        [HttpGet("userplan-target")]
+        public async Task<IActionResult> GetUserPlanTargetReport(string searchMonth, string manager = "")
+        {
+            if (string.IsNullOrEmpty(searchMonth))
+            {
+                return BadRequest("검색 월이 지정되지 않았습니다.");
+            }
+
+            if (string.IsNullOrEmpty(manager))
+            {
+                return BadRequest("담당자가 지정되지 않았습니다.");
+            }
+            try
+            {
+                var response = await _reportService.GetUserPlanTargetReportAsync(searchMonth, manager);
+
+                // DTO를 List로 변환하여 반환
+                return Ok(new ApiResponse<UserPlanTargetReportDto>
+                {
+                    Message = "계획별 주문현황(달성율)이 조회가 완료되었습니다.",
+                    Data = response ?? new UserPlanTargetReportDto(),
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"서버 오류가 발생했습니다. {ex.Message}");
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿
 using Dapper;
 using System.Data;
+using WebApi.DTOs;
 using WebApi.Infrastructure;
 
 namespace WebApi.Services.Report
@@ -127,6 +128,42 @@ namespace WebApi.Services.Report
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"계획별주문현황 조회 중 오류 발생: searchMonth={searchMonth}, manager={manager}");
+                throw;
+            }
+        }
+
+        public async Task<UserPlanTargetReportDto> GetUserPlanTargetReportAsync(string searchMonth, string manager = "")
+        {
+            try
+            {
+                using var connection = _connectionFactory.CreateConnection();
+
+                // 파라미터 생성
+                var parameters = new DynamicParameters();
+                parameters.Add("@CD_CORP", "01", DbType.String);
+                parameters.Add("@CD_BUSIDIV", "001", DbType.String);
+                parameters.Add("@CD_EMP", "0038", DbType.String);
+                parameters.Add("@DT_YYYYMM", searchMonth, DbType.String);
+
+                var response = await connection.QueryFirstAsync<UserPlanTargetReportDto>(
+                    "SP_SMPL_USERPLANTARGET_SV",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+
+                if (response == null)
+                {
+                    _logger.LogWarning($"계획별주문현황(달성율) 데이터가 없습니다: searchMonth={searchMonth}, manager={manager}");
+                    return new UserPlanTargetReportDto();
+                }
+                _logger.LogInformation($"계획별주문현황(달성율) 조회 성공: searchMonth={searchMonth}, manager={manager}");
+
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"계획별주문현황(달성율) 조회 중 오류 발생: searchMonth={searchMonth}, manager={manager}");
                 throw;
             }
         }
