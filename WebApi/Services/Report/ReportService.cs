@@ -109,7 +109,7 @@ namespace WebApi.Services.Report
                 var parameters = new DynamicParameters();
                 parameters.Add("@CD_CORP", "01", DbType.String);
                 parameters.Add("@CD_BUSIDIV", "001", DbType.String);
-                parameters.Add("@CD_EMP", "0065", DbType.String);
+                parameters.Add("@CD_EMP", manager, DbType.String);
                 parameters.Add("@DT_YYYYMM", searchMonth, DbType.String);
                 parameters.Add("@CD_VALUEGB", valueDivCode, DbType.Int32);
                 parameters.Add("@CD_ITEMDIV", itemDivCode, DbType.String);
@@ -142,7 +142,7 @@ namespace WebApi.Services.Report
                 var parameters = new DynamicParameters();
                 parameters.Add("@CD_CORP", "01", DbType.String);
                 parameters.Add("@CD_BUSIDIV", "001", DbType.String);
-                parameters.Add("@CD_EMP", "0038", DbType.String);
+                parameters.Add("@CD_EMP", manager, DbType.String);
                 parameters.Add("@DT_YYYYMM", searchMonth, DbType.String);
 
                 var response = await connection.QueryFirstAsync<UserPlanTargetReportDto>(
