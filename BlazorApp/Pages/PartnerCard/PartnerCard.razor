@@ -48,7 +48,7 @@
             </MudTabPanel>
             <MudTabPanel Text="매출">
                 <ChildContent>
-                    <Orders Data="@partnerCard.Orders"></Orders>
+                    <Orders Data="@partnerCard.Orders" OpticianId="@partnerCard.Optician.Id"></Orders>
                     <OrdersChart Data="@partnerCard.Orders" />
                 </ChildContent>
             </MudTabPanel>

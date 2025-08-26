@@ -4,7 +4,23 @@
 
 <MudCard Elevation="3" Class="pa-4 mb-2">
     <MudCardHeader>
-        <MudText Typo="Typo.h6" Color="Color.Primary">매출 내역</MudText>
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.h6" Color="Color.Primary">매출 내역</MudText>
+            <MudSelect @bind-Value="_yearValue"
+                       Label="조회년"
+                       Variant="Variant.Outlined"
+                       Dense="true"
+                       Margin="Margin.Dense"
+                       Style="width: 150px;">
+                @foreach (var year in _years)
+                {
+                    <MudSelectItem Value="year">@year</MudSelectItem>
+                }
+            </MudSelect>
+            <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="RefreshData">
+                <MudIcon Icon="@Icons.Material.Filled.Refresh" />
+            </MudButton>
+        </MudStack>
     </MudCardHeader>
     <MudCardContent>
         @if (Data == null)
@@ -20,7 +36,7 @@
         }
         else
         {
-            <MudTable Items="@Data" Height="200px" FixedHeader="true" HorizontalScrollbar="true" Hover="true" Elevation="0">
+            <MudTable Items="@orderDtos" Height="200px" FixedHeader="true" HorizontalScrollbar="true" Hover="true" Elevation="0">
                 <HeaderContent>
                     <MudTh>구분</MudTh>
                     <MudTh>1월</MudTh>
@@ -70,6 +86,27 @@
 </style>
 
 @code {
-    [Parameter]
-    public List<OrderDto> Data { get; set; } = new List<OrderDto>();
+    [Parameter] public List<OrderDto> Data { get; set; } = new List<OrderDto>();
+    [Parameter] public string OpticianId { get; set; } = string.Empty;
+
+    private List<OrderDto> orderDtos { get; set; } = new List<OrderDto>();
+
+    private int _yearValue = DateTime.Now.Year;
+    private int[] _years =
+    {
+        2021, 2022, 2023, 2024, 2025
+    };
+
+    protected override void OnInitialized()
+    {
+        if (Data != null)
+        {
+            orderDtos = Data;
+        }
+    }
+    
+    private async Task RefreshData()
+    {
+        var opticianId = Data.FirstOrDefault()?.CD_PARTNER ?? string.Empty;
+    }
 }
