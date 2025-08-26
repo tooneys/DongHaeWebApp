@@ -8,6 +8,7 @@ namespace BlazorApp.Services.PartnerCard
     public interface IPartnerCardClientService
     {
         Task<PartnerCardDto?> GetPartnerCardAsync(string opticianId);
+        Task<List<OrderDto>> GetOrderDtosAsync(string opticianId, int year);
         Task<List<OpticianHistoryDto>> GetVisitHistoryAsync(string opticianId, DateTime? startDate = null, DateTime? endDate = null, string? searchTerm = null);
         Task<OpticianHistoryDto?> AddVisitHistoryAsync(OpticianHistoryDto historyDto);
         Task<OpticianHistoryDto?> GetVisitHistoryDetailAsync(int historyId);
@@ -388,6 +389,42 @@ namespace BlazorApp.Services.PartnerCard
             {
                 _notificationService.ShowError($"{imageSlot}번재 이미지 삭제 중 오류 발생.");
                 _logger.LogError(ex, $"이미지 삭제 중 오류 발생: imageSlot={imageSlot}");
+                throw;
+            }
+        }
+
+        public async Task<List<OrderDto>> GetOrderDtosAsync(string opticianId, int year)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(opticianId))
+                    throw new ArgumentException("안경원코드가 필요합니다.", nameof(opticianId));
+
+                _logger.LogInformation($"매출정보 조회 시작: OpticianId={opticianId}");
+
+                var response = await _httpClient.GetAsync($"api/partnercard/orders/{opticianId}?year={year}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var apiResponse = await _apiResponseHandler.HandleResponseAsync<List<OrderDto>>(response);
+
+                    _logger.LogInformation($"매출정보 조회 완료: OpticianId={opticianId}, Found={apiResponse?.Data != null}");
+
+                    return apiResponse?.Data ?? new List<OrderDto>();
+                }
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    _logger.LogWarning($"매출정보를 찾을 수 없음: OpticianId={opticianId}");
+                    return new List<OrderDto>();
+                }
+
+                var errorMessage = await _apiResponseHandler.ExtractErrorMessageAsync(response);
+                throw new HttpRequestException($"매출정보 조회 실패: {errorMessage}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"매출정보 조회 중 오류 발생: OpticianId={opticianId}");
                 throw;
             }
         }

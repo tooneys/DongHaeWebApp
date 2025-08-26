@@ -7,7 +7,7 @@ namespace WebApi.Services.PartnerCard
         Task<PartnerCardDetail> GetPartnerCardDetailById(string opticianId);
         Task<IEnumerable<CustNote>> GetCustNotesById(string opticianId);
         Task<IEnumerable<OpticianPromotion>> GetOpticianPromotionById(string opticianId);
-        Task<IEnumerable<OrderDto>> GetOrdersById(string opticianId);
+        Task<IEnumerable<OrderDto>> GetOrdersById(string opticianId, int year);
         Task<IEnumerable<SalesOrderDto>> GetSalesOrdersById(string opticianId);
         Task<IEnumerable<ReturnOrderDto>> GetReturnOrdersById(string opticianId);
         Task<IEnumerable<OpticianHistoryDto>> GetOpticianHistoriesById(string opticianId);

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using WebApi.DTOs;
 using WebApi.Models;
 using WebApi.Services.Common;
@@ -128,6 +129,8 @@ namespace WebApi.Controllers
         {
             try
             {
+                int year = DateTime.Now.Year;
+
                 var validationResult = ValidateOpticianId(opticianId);
                 if (validationResult != null)
                     return validationResult;
@@ -139,7 +142,7 @@ namespace WebApi.Controllers
                 var partnerCardDetailTask = _partnerCardService.GetPartnerCardDetailById(opticianId);
                 var custNotesTask = _partnerCardService.GetCustNotesById(opticianId);
                 var promotionsTask = _partnerCardService.GetOpticianPromotionById(opticianId);
-                var ordersTask = _partnerCardService.GetOrdersById(opticianId);
+                var ordersTask = _partnerCardService.GetOrdersById(opticianId, year);
                 var salesOrdersTask = _partnerCardService.GetSalesOrdersById(opticianId);
                 var returnOrdersTask = _partnerCardService.GetReturnOrdersById(opticianId);
                 var opticianHistoriesTask = _partnerCardService.GetOpticianHistoriesById(opticianId);
@@ -185,6 +188,61 @@ namespace WebApi.Controllers
                 _logger.LogError(ex, "파트너카드 조회 중 오류 발생: OpticianId={OpticianId}", opticianId);
                 return StatusCode(500, new ApiErrorResponse(
                     "파트너카드 조회 중 오류가 발생했습니다.",
+                    "INTERNAL_ERROR",
+                    ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// 매출 통계를 조회합니다.
+        /// </summary>
+        /// <param name="opticianId"></param>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <param name="searchTerm"></param>
+        /// <returns></returns>
+        [HttpGet("orders/{opticianId}")]
+        [ProducesResponseType(typeof(ApiResponse<List<OpticianHistoryDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetOrderDtosAsync(
+            string opticianId,
+            [FromQuery] int year)
+        {
+            try
+            {
+                var opticianValidation = ValidateOpticianId(opticianId);
+                if (opticianValidation != null)
+                    return opticianValidation;
+
+                _logger.LogInformation($"매출 통계 목록 조회 시작: OpticianId={opticianId}, Year={year}");
+
+                var orders = await _partnerCardService.GetOrdersById(opticianId, year);
+
+                if (orders == null || !orders.Any())
+                {
+                    return Ok(new ApiResponse<List<OrderDto>>
+                    {
+                        Message = "매출 통계가 조회가 완료되었습니다.",
+                        Data = new List<OrderDto>(),
+                        TotalCount = 0
+                    });
+                }
+
+                _logger.LogInformation($"매출 통계 목록 조회 완료: OpticianId={opticianId}, TotalCount={orders.Count()}");
+
+                return Ok(new ApiResponse<List<OrderDto>>
+                {
+                    Message = "매출 통계 조회가 완료되었습니다.",
+                    Data = orders.ToList(),
+                    TotalCount = orders.Count()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "매출 통계 조회 중 오류 발생: OpticianId={OpticianId}", opticianId);
+                return StatusCode(500, new ApiErrorResponse(
+                    "방문이력 조회 중 오류가 발생했습니다.",
                     "INTERNAL_ERROR",
                     ex.Message));
             }

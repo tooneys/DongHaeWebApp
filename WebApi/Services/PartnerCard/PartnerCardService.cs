@@ -91,7 +91,7 @@ namespace WebApi.Services.PartnerCard
             }
         }
 
-        public async Task<IEnumerable<OrderDto>> GetOrdersById(string opticianId)
+        public async Task<IEnumerable<OrderDto>> GetOrdersById(string opticianId, int year)
         {
             try
             {
@@ -102,6 +102,7 @@ namespace WebApi.Services.PartnerCard
                 parameters.Add("@CD_CORP", "01");
                 parameters.Add("@CD_BUSIDIV", "001");
                 parameters.Add("@CD_CUST", opticianId);
+                parameters.Add("@DT_YYYY", year);
 
                 var orders = await connection.QueryAsync<OrderDto>(
                     "SP_SMVW_PARTNERCARD_ACCT_S",
@@ -133,8 +134,8 @@ namespace WebApi.Services.PartnerCard
                 parameters.Add("@CD_BUSIDIV", "001");
                 parameters.Add("@CD_CUST", opticianId);
                 parameters.Add("@CD_ITEMDIV", "");
-                parameters.Add("@DT_COMP_F", dateFrom);
-                parameters.Add("@DT_COMP_T", dateTo);
+                //parameters.Add("@DT_COMP_F", dateFrom);
+                //parameters.Add("@DT_COMP_T", dateTo);
 
                 var orders = await connection.QueryAsync<SalesOrderDto>(
                     "SP_SMVW_PARTNERCARD_ACCT_S2",
@@ -159,19 +160,14 @@ namespace WebApi.Services.PartnerCard
 
                 using var connection = _connectionFactory.CreateConnection();
 
-                string dateFrom = DateTime.Now.ToString("yyyyMM01");
-                string dateTo = DateTime.Now.ToString("yyyyMMdd");
-
                 // 파라미터 생성
                 var parameters = new DynamicParameters();
                 parameters.Add("@CD_CORP", "01");
                 parameters.Add("@CD_BUSIDIV", "001");
                 parameters.Add("@CD_CUST", opticianId);
-                parameters.Add("@DT_COMP_F", dateFrom);
-                parameters.Add("@DT_COMP_T", dateTo);
 
                 var orders = await connection.QueryAsync<ReturnOrderDto>(
-                    "SP_SMVW_PARTNERCARD_RETURN_S",
+                    "SP_API_SMCR_RETURN_PSV",
                     parameters,
                     commandType: CommandType.StoredProcedure
                 );

@@ -119,17 +119,16 @@ namespace BlazorApp.Models
     public class ReturnOrderDto
     {
         public string NO_ORDER { get; set; } = string.Empty;
-        public string NO_SMCR { get; set; } = string.Empty;
-        public string NO_SEQ { get; set; } = string.Empty;
         public string NM_CUST { get; set; } = string.Empty;
-        public string CD_ITEM { get; set; } = string.Empty;
         public string NM_ITEM { get; set; } = string.Empty;
+        public string VL_RL { get; set; } = string.Empty;
+        public string TX_DOSU { get; set; } = string.Empty;
         public decimal QT_RETURN { get; set; }
-        public string CD_REASON { get; set; } = string.Empty;
-        public string TX_REASONDESC { get; set; } = string.Empty;
-        public decimal RT_RETURN { get; set; }
         public decimal AM_RETURN { get; set; }
-        public string NM_EMP { get; set; } = string.Empty;
+        public decimal RT_RETURN { get; set; }
+        public string NM_REASON { get; set; } = string.Empty;
+        public string TX_REASONDESC { get; set; } = string.Empty;
+        public DateTime? DT_RETURN { get; set; }
     }
 
     // <summary>

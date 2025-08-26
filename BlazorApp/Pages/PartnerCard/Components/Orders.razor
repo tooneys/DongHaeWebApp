@@ -1,6 +1,6 @@
 ﻿@attribute [Authorize]
 
-@using BlazorApp.Models
+@inject IPartnerCardClientService PartnerCardClientService
 
 <MudCard Elevation="3" Class="pa-4 mb-2">
     <MudCardHeader>
@@ -23,12 +23,12 @@
         </MudStack>
     </MudCardHeader>
     <MudCardContent>
-        @if (Data == null)
+        @if (orderDtos == null)
         {
             <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="my-4" />
             <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">매출정보 검색 중...</MudText>
         }
-        else if (!Data.Any())
+        else if (!orderDtos.Any())
         {
             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-4">
                 매출 내역이 없습니다.
@@ -73,6 +73,9 @@
                     <MudTablePager HorizontalAlignment="HorizontalAlignment.Left" />
                 </PagerContent>
             </MudTable>
+
+            // Chart
+            <OrdersChart Data="@orderDtos" />
         }
     </MudCardContent>
 </MudCard>
@@ -104,9 +107,22 @@
             orderDtos = Data;
         }
     }
-    
+
     private async Task RefreshData()
     {
-        var opticianId = Data.FirstOrDefault()?.CD_PARTNER ?? string.Empty;
+        if (string.IsNullOrEmpty(OpticianId))
+        {
+            return;
+        }
+
+        if (_yearValue < 0)
+        {
+            _yearValue = DateTime.Now.Year;
+        }
+
+        orderDtos.Clear();
+        orderDtos = await PartnerCardClientService.GetOrderDtosAsync(OpticianId, _yearValue);
+
+        StateHasChanged();
     }
 }

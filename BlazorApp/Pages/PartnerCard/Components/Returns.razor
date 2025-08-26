@@ -20,32 +20,41 @@
         }
         else
         {
-            <MudTable Items="@Data" Height="400px" FixedHeader="true" HorizontalScrollbar="true" Hover="true" Elevation="0">
+            <!-- 필터 섹션을 별도 컴포넌트로 분리 고려 -->
+            <VisitHistoryFilter @bind-StartDate="startDate"
+                                @bind-EndDate="endDate"
+                                @bind-SearchText="searchText"
+                                OnFilterCleared="ClearAllFilters"
+                                OnFilterChanged="OnFilterChanged" />
+
+            <MudDivider />
+
+            <MudTable Items="@FilteredData" Height="400px" FixedHeader="true" HorizontalScrollbar="true" Hover="true" Elevation="0">
                 <HeaderContent>
                     <MudTh>오더번호</MudTh>
-                    <MudTh>반품번호</MudTh>
-                    <MudTh>순번</MudTh>
-                    <MudTh>안경원명</MudTh>
+                    <MudTh>안경원</MudTh>
                     <MudTh>상품명</MudTh>
+                    <MudTh>R/L</MudTh>
+                    <MudTh>도수</MudTh>
                     <MudTh>수량</MudTh>
+                    <MudTh>금액</MudTh>
+                    <MudTh>반품율</MudTh>
                     <MudTh>반품사유</MudTh>
                     <MudTh>반품상세사유</MudTh>
-                    <MudTh>반품율</MudTh>
-                    <MudTh>반품금액</MudTh>
-                    <MudTh>담당자</MudTh>
+                    <MudTh>반품일자</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="오더번호">@context.NO_ORDER</MudTd>
-                    <MudTd DataLabel="반품번호">@context.NO_SMCR</MudTd>
-                    <MudTd DataLabel="순번">@context.NO_SEQ</MudTd>
-                    <MudTd DataLabel="안경원명">@context.NM_CUST</MudTd>
+                    <MudTd DataLabel="안경원">@context.NM_CUST</MudTd>
                     <MudTd DataLabel="상품명">@context.NM_ITEM</MudTd>
-                    <MudTd DataLabel="수량">@context.QT_RETURN</MudTd>
-                    <MudTd DataLabel="반품사유">@context.CD_REASON</MudTd>
+                    <MudTd DataLabel="R/L">@context.VL_RL</MudTd>
+                    <MudTd DataLabel="도수">@context.TX_DOSU</MudTd>
+                    <MudTd DataLabel="수량">@context.QT_RETURN.ToString("n0")</MudTd>
+                    <MudTd DataLabel="금액">@context.AM_RETURN.ToString("n0")</MudTd>
+                    <MudTd DataLabel="반품율">@context.RT_RETURN.ToString("n2")</MudTd>
+                    <MudTd DataLabel="반품사유">@context.NM_REASON</MudTd>
                     <MudTd DataLabel="반품상세사유">@context.TX_REASONDESC</MudTd>
-                    <MudTd DataLabel="반품율">@context.RT_RETURN</MudTd>
-                    <MudTd DataLabel="반품금액">@context.AM_RETURN</MudTd>
-                    <MudTd DataLabel="담당자">@context.NM_EMP</MudTd>
+                    <MudTd DataLabel="반품일자">@context.DT_RETURN?.ToString("yyyy-MM-dd")</MudTd>
                 </RowTemplate>
                 <PagerContent>
                     <MudTablePager HorizontalAlignment="HorizontalAlignment.Left" />
@@ -66,4 +75,69 @@
 @code {
     [Parameter]
     public List<ReturnOrderDto> Data { get; set; } = new List<ReturnOrderDto>();
+
+    private DateTime? startDate;
+    private DateTime? endDate;
+    private string searchText = string.Empty;
+
+    // 메모이제이션을 위한 캐시
+    private IEnumerable<ReturnOrderDto>? _filteredDataCache;
+    private (DateTime?, DateTime?, int) _lastFilterState;
+
+    private IEnumerable<ReturnOrderDto> FilteredData
+    {
+        get
+        {
+            var currentState = (startDate, endDate, Data?.Count ?? 0);
+
+            // 필터 조건이나 데이터가 변경되지 않았다면 캐시된 결과 반환
+            if (_filteredDataCache != null && _lastFilterState.Equals(currentState))
+                return _filteredDataCache;
+
+            _lastFilterState = currentState;
+            _filteredDataCache = ComputeFilteredData();
+            return _filteredDataCache;
+        }
+    }
+
+    private IEnumerable<ReturnOrderDto> ComputeFilteredData()
+    {
+        if (Data == null) return Enumerable.Empty<ReturnOrderDto>();
+
+        var filtered = Data.AsEnumerable();
+
+        if (startDate.HasValue)
+        {
+            filtered = filtered.Where(x =>
+                DateTime.TryParse(x.DT_RETURN?.ToString(), out var date) && date >= startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            filtered = filtered.Where(x =>
+                DateTime.TryParse(x.DT_RETURN?.ToString(), out var date) && date <= endDate.Value);
+        }
+
+        return filtered.OrderByDescending(x => x.DT_RETURN).ToList(); // ToList()로 즉시 실행
+    }
+
+    private void ClearAllFilters()
+    {
+        startDate = null;
+        endDate = null;
+        searchText = null;
+        _filteredDataCache = null; // 캐시 무효화
+    }
+
+    private void OnFilterChanged(FilterChangedEventArgs args)
+    {
+        // 필터 변경 시 처리 로직
+        _filteredDataCache = null; // 캐시 무효화
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _filteredDataCache = null;
+    }
 }
