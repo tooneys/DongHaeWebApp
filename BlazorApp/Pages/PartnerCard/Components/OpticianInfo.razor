@@ -52,7 +52,7 @@
                         <MudGrid>
                             <MudItem xs="12" sm="6">
                                 <MudStack>
-                                    <MudField Label="외형매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.SalesAmount</MudField>
+                                    <MudField Label="외형매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.SalesAmount.ToString("n0")</MudField>
                                     <MudField Label="마인드" Variant="Variant.Outlined">@Data.PartnerCardDetail.Mind</MudField>
                                     <MudField Label="결제" Variant="Variant.Outlined">@Data.PartnerCardDetail.Payment</MudField>
                                     <MudField Label="EHC안경사" Variant="Variant.Outlined">@Data.PartnerCardDetail.EHCOpt</MudField>
@@ -62,11 +62,11 @@
                             </MudItem>
                             <MudItem xs="12" sm="6">
                                 <MudStack>
-                                    <MudField Label="Tokai평균매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.TokaiAverageAmount</MudField>
-                                    <MudField Label="Tokai목표매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.TokaiGoalAmount</MudField>
-                                    <MudField Label="H사 매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.H_Amount</MudField>
-                                    <MudField Label="E사 매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.E_Amount</MudField>
-                                    <MudField Label="Z사 매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.Z_Amount</MudField>
+                                    <MudField Label="Tokai평균매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.TokaiAverageAmount.ToString("n0")</MudField>
+                                    <MudField Label="Tokai목표매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.TokaiGoalAmount.ToString("n0")</MudField>
+                                    <MudField Label="H사 매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.H_Amount.ToString("n0")</MudField>
+                                    <MudField Label="E사 매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.E_Amount.ToString("n0")</MudField>
+                                    <MudField Label="Z사 매출" Variant="Variant.Outlined">@Data.PartnerCardDetail.Z_Amount.ToString("n0")</MudField>
                                 </MudStack>
                             </MudItem>
                         </MudGrid>
@@ -100,9 +100,9 @@
         </MudItem>
 
         <!-- 판촉물 테이블 -->
-        <MudItem xs="12" md="6">
+        @* <MudItem xs="12" md="6">
             <PromotionComponent Data="Data"/>
-        </MudItem>
+        </MudItem> *@
     </MudGrid>
 }
 
