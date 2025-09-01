@@ -11,8 +11,7 @@ namespace WebApi.DTOs
         [Required(ErrorMessage = "탭구분은 필수입니다.")]
         public string TabType { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "설명은 필수입니다.")]
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; }
 
         public IFormFile? CoverImage { get; set; }
         
