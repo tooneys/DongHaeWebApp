@@ -50,7 +50,8 @@
                 <tr>
                     @foreach (var col in columns)
                     {
-                        <th>@col.title</th>
+                        var isWeekHeader = col.title.EndsWith("계");
+                        <th style="background-color: @(isWeekHeader ? "#BFEFFF": "");">@col.title</th>
                     }
                 </tr>
             </thead>
@@ -60,16 +61,19 @@
                         <tr>
                             @foreach (var col in columns)
                             {
-                                <td>@(row.TryGetValue(col.field, out var val) ? FormatValue(val) : "")</td>
+                                var isWeekHeader = col.title.EndsWith("계");
+                                <td style="background-color: @(isWeekHeader ? "#BFEFFF" : "");">
+                                    @(row.TryGetValue(col.field, out var val) ? FormatValue(val) : "")
+                                </td>
                             }
                         </tr>
                     </ItemContent>
                 </Virtualize>
             </tbody>
-            <tfoot>
+            @* <tfoot>
                 <tr>
                     <td colspan="2">합계</td>
-                    @for (int i = 2; i < columns.Count - 3; i++)  // 마지막 열(예: 등급 담당자 코드여부)은 합산 제외
+                    @for (int i = 2; i < columns.Count; i++)  // 마지막 열(예: 등급 담당자 코드여부)은 합산 제외
                     {
                         var col = columns[i];
                         decimal total = rows.Sum(r =>
@@ -90,11 +94,8 @@
                         });
                         <td>@total.ToString("N0")</td>
                     }
-                    <td></td>
-                    <td></td>
-                    <td></td>
                 </tr>
-            </tfoot>
+            </tfoot> *@
 
         </table>
     </div>
@@ -241,7 +242,7 @@ else
                 if (je.TryGetDecimal(out var dec))
                     return dec.ToString("N0");          // 천단위 구분
                 if (je.TryGetInt64(out var i64))
-                    return i64.ToString("N0");
+                    return i64.ToString("N1");
             }
             // 문자열일 경우 (날짜 문자열 포함)
             else if (je.ValueKind == JsonValueKind.String)
