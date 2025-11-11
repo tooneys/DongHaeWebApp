@@ -40,7 +40,7 @@ builder.Services.AddScoped(sp =>
     var httpClient = new HttpClient
     {
         BaseAddress = new Uri(apiBaseUrl),
-        Timeout = TimeSpan.FromSeconds(30)
+        Timeout = TimeSpan.FromSeconds(300)
     };
 
     // 기본 헤더 설정

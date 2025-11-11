@@ -22,46 +22,56 @@
                 <MudText Typo="Typo.body2" Typo-md="Typo.subtitle1" Class="text-white" Style="opacity:0.85;">
                     오늘의 매출 현황을 확인해보세요.
                 </MudText>
+                
             </div>
         </div>
 
         @* 우측: 관리자 기능 *@
-        @if (_isAdmin)
-        {
-            <MudSpacer />
+        <MudSpacer />
 
-            <div class="d-flex flex-column align-items-start align-items-md-end w-100 w-md-auto">
+        <div class="d-flex flex-column align-items-start align-items-md-end w-100 w-md-auto">
+            @if (_isAdmin)
+            {
                 <MudText Typo="Typo.caption" Typo-md="Typo.subtitle2" Class="text-white mb-1 mb-md-2" Style="opacity:0.85;">
                     관리자 모드로 접속 중입니다.
                 </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.caption" Typo-md="Typo.subtitle2" Class="text-white mb-1 mb-md-2" Style="opacity:0.85;">
+                </MudText>
+            }
 
-                @if (_employees != null)
-                {
-                    <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 w-100 w-md-auto">
+            @if (_employees != null)
+            {
+                <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 w-100 w-md-auto">
+                    <MudDatePicker Label="조회년월" @bind-Date="_month" OpenTo="OpenTo.Month" FixYear="@DateTime.Today.Year" FixDay="@DateTime.Today.Day" DateFormat="yyyy-MM" />
+                    @if (_isAdmin)
+                    {
                         <MudSelect @bind-Value="_value"
-                                   Label="영업사원"
-                                   Clearable="true"
-                                   Style="min-width:150px; max-width:200px;"
-                                   Class="flex-grow-1 flex-sm-grow-0">
+                                    Label="영업사원"
+                                    Clearable="true"
+                                    Style="min-width:150px; max-width:200px;"
+                                    Class="flex-grow-1 flex-sm-grow-0">
                             @foreach (var employee in _employees)
                             {
                                 <MudSelectItem Value="employee.EmpCode">@employee.EmpName</MudSelectItem>
                             }
                         </MudSelect>
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Surface"
-                                   StartIcon="@Icons.Material.Filled.Refresh"
-                                   OnClick="OnRefreshClick"
-                                   Class="text-primary"
-                                   Size="Size.Medium"
-                                   FullWidth="true"
-                                   FullWidth-sm="false">
-                            전체 새로고침
-                        </MudButton>
-                    </div>
-                }
-            </div>
-        }
+                    }
+                    <MudButton Variant="Variant.Filled"
+                                Color="Color.Surface"
+                                StartIcon="@Icons.Material.Filled.Refresh"
+                                OnClick="OnRefreshClick"
+                                Class="text-primary"
+                                Size="Size.Medium"
+                                FullWidth="true"
+                                FullWidth-sm="false">
+                        전체 새로고침
+                    </MudButton>
+                </div>
+            }
+        </div>
     </div>
 </MudPaper>
 
@@ -74,6 +84,7 @@
     private string _currentDateTime = "";
     private Timer? _timeUpdateTimer;
     private List<EmployeeDto>? _employees;
+    private DateTime? _month = DateTime.Now;
 
     private string _value { get; set; }
 
@@ -104,6 +115,7 @@
 
     private async Task OnRefreshClick()
     {
+        await localStorageService.SetItemAsync("selectedMonth", _month?.ToString("yyyyMM"));
         await localStorageService.SetItemAsync("selectedEmployeeCode", _value);
         await OnRefresh.InvokeAsync();
     }

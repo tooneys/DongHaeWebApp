@@ -23,8 +23,18 @@ window.naverMapUtils = {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
             });
-            MapRenderer.drawRadius(map, map.getCenter(), 3000);
-            
+            MapRenderer.drawRadius(map, map.getCenter(), 5000);
+
+            // 2-1. 현위치 표기 및 클릭 위치 표기
+            var clickMarker = new naver.maps.Marker({
+                position: new naver.maps.LatLng(position.coords.latitude, position.coords.longitude),
+                map: map
+            });
+
+            naver.maps.Event.addListener(map, 'click', function (e) {
+                clickMarker.setPosition(e.coord);
+            });
+
             // 3. 좌표 변환 (Web Worker)
             const startConv = performance.now();
             const converted = await CoordConverter.batchConvert(markers);
@@ -38,7 +48,7 @@ window.naverMapUtils = {
                     position.coords.longitude,
                     m.lat,
                     m.lng
-                ) <= 3
+                ) <= 5
             );
             perf.filtering = performance.now() - startFilter;
 

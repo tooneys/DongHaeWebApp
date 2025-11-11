@@ -20,6 +20,7 @@ namespace WebApi.Controllers
         [HttpGet("top/{count:int}")]
         public async Task<ActionResult<List<OpticalStoreSalesDto>>> GetTopStoresSales(
             int count = 10,
+            [FromQuery] string month = "",
             [FromQuery] string userId = "",
             CancellationToken cancellationToken = default
         )
@@ -31,7 +32,7 @@ namespace WebApi.Controllers
                     return BadRequest("상위 랭크 선택은 1부터 100까지만 설정할 수 있습니다.");
                 }
 
-                var result = await _salesService.GetTopStoresSalesAsync(count, userId, cancellationToken);
+                var result = await _salesService.GetTopStoresSalesAsync(count, month, userId, cancellationToken);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -43,13 +44,14 @@ namespace WebApi.Controllers
 
         [HttpGet("current-month")]
         public async Task<ActionResult<List<OpticalStoreSalesDto>>> GetCurrentMonthSales(
+            [FromQuery] string month = "",
             [FromQuery] string userId = "",
             CancellationToken cancellationToken = default
         )
         {
             try
             {
-                var result = await _salesService.GetCurrentMonthSalesAsync(userId, cancellationToken);
+                var result = await _salesService.GetCurrentMonthSalesAsync(month, userId, cancellationToken);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -61,13 +63,14 @@ namespace WebApi.Controllers
 
         [HttpGet("decline")]
         public async Task<ActionResult<List<OpticalStoreSalesDeclineDto>>> GetCurrentMonthSalesDecline(
+            [FromQuery] string month = "",
             [FromQuery] string userId = "",
             CancellationToken cancellationToken = default
         )
         {
             try
             {
-                var result = await _salesService.GetCurrentMonthSalesDeclineAsync(userId, cancellationToken);
+                var result = await _salesService.GetCurrentMonthSalesDeclineAsync(month,userId, cancellationToken);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -79,13 +82,14 @@ namespace WebApi.Controllers
 
         [HttpGet("itemgroup")]
         public async Task<ActionResult<List<ItemGroupSalesDto>>> GetItemGroupSales(
+            [FromQuery] string month = "",
             [FromQuery] string userId = "",
             CancellationToken cancellationToken = default
         )
         {
             try
             {
-                var result = await _salesService.GetItemGroupSalesAsync(userId, cancellationToken);
+                var result = await _salesService.GetItemGroupSalesAsync(month, userId, cancellationToken);
                 return Ok(result);
             }
             catch (Exception ex)

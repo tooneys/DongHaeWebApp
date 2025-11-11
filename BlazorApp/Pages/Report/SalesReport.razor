@@ -31,12 +31,24 @@
             <MudTextField Label="담당자" @bind-Value="manager" Disabled="@isDisable" />
         </MudItem>
         <MudItem xs="12">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadData">검색</MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="@LoadData"
+                       Disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span>검색중...</span>
+                }
+                else
+                {
+                    <span>검색</span>
+                }
+            </MudButton>
         </MudItem>
     </MudGrid>
 </MudPaper>
 
-@if (columns?.Any() == true)
+@if (!isLoading && columns?.Any() == true)
 {
     <div class="table-container">
         <table class="custom-table">
@@ -93,6 +105,10 @@
         </table>
     </div>
 }
+else if(isLoading)
+{
+    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+}
 else
 {
     <div class="no-data">데이터가 없습니다.</div>
@@ -116,6 +132,7 @@ else
 
     bool isAdmin = true;
     bool isDisable => !isAdmin;
+    private bool isLoading = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -131,12 +148,21 @@ else
 
     private async Task LoadData()
     {
-        var url = $"api/report/sales?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}&type={searchType}&customer={customer}&manager={manager}";
-        var result = await Http.GetFromJsonAsync<ApiResult>(url);
-        if (result != null)
+        isLoading = true;
+
+        try
         {
-            columns = result.columns;
-            rows = result.rows;
+            var url = $"api/report/sales?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}&type={searchType}&customer={customer}&manager={manager}";
+            var result = await Http.GetFromJsonAsync<ApiResult>(url);
+            if (result != null)
+            {
+                columns = result.columns;
+                rows = result.rows;
+            }
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 

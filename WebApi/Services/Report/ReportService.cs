@@ -62,7 +62,8 @@ namespace WebApi.Services.Report
                 var response = await connection.QueryAsync(
                     "SP_SMVW_SALESCUST_SV",
                     parameters,
-                    commandType: CommandType.StoredProcedure
+                    commandType: CommandType.StoredProcedure,
+                    commandTimeout: 0
                 );
 
                 var records = response.Cast<IDictionary<string, object>>().Select(row => row.ToDictionary(k => k.Key, v => v.Value))
@@ -117,7 +118,8 @@ namespace WebApi.Services.Report
                 var response = await connection.QueryAsync(
                     "SP_SMPL_USERPLAN_SV",
                     parameters,
-                    commandType: CommandType.StoredProcedure
+                    commandType: CommandType.StoredProcedure,
+                    commandTimeout: 0
                 );
 
                 var records = response.Cast<IDictionary<string, object>>().Select(row => row.ToDictionary(k => k.Key, v => v.Value))
@@ -148,7 +150,8 @@ namespace WebApi.Services.Report
                 var response = await connection.QueryFirstAsync<UserPlanTargetReportDto>(
                     "SP_SMPL_USERPLANTARGET_SV",
                     parameters,
-                    commandType: CommandType.StoredProcedure
+                    commandType: CommandType.StoredProcedure,
+                    commandTimeout: 0
                 );
 
                 if (response == null)

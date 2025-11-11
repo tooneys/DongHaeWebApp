@@ -16,7 +16,7 @@ namespace WebApi.Services.Dashboard
             _logger = logger;
         }
 
-        public async Task<List<OpticalStoreSalesDto>> GetTopStoresSalesAsync(int count, string userId, CancellationToken cancellationToken = default)
+        public async Task<List<OpticalStoreSalesDto>> GetTopStoresSalesAsync(int count, string month, string userId, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -24,6 +24,7 @@ namespace WebApi.Services.Dashboard
 
                 var parameters = new DynamicParameters();
                 parameters.Add("@Count", count, DbType.Int32);
+                parameters.Add("@Months", month, DbType.String);
                 parameters.Add("@UserId", userId, DbType.String);
 
                 var result = await connection.QueryAsync<OpticalStoreSalesDto>(
@@ -41,19 +42,21 @@ namespace WebApi.Services.Dashboard
             }
         }
 
-        public async Task<List<OpticalStoreSalesDto>> GetCurrentMonthSalesAsync(string userId, CancellationToken cancellationToken = default)
+        public async Task<List<OpticalStoreSalesDto>> GetCurrentMonthSalesAsync(string month, string userId, CancellationToken cancellationToken = default)
         {
             try
             {
                 using var connection = _connectionFactory.CreateConnection();
 
                 var parameters = new DynamicParameters();
+                parameters.Add("@Months", month, DbType.String);
                 parameters.Add("@UserId", userId, DbType.String);
 
                 var result = await connection.QueryAsync<OpticalStoreSalesDto>(
                     "GetCurrentMonthSales",
                     parameters,
-                    commandType: CommandType.StoredProcedure
+                    commandType: CommandType.StoredProcedure,
+                    commandTimeout: 0
                 );
 
                 return result.ToList();
@@ -65,19 +68,21 @@ namespace WebApi.Services.Dashboard
             }
         }
 
-        public async Task<List<OpticalStoreSalesDeclineDto>> GetCurrentMonthSalesDeclineAsync(string userId, CancellationToken cancellationToken = default)
+        public async Task<List<OpticalStoreSalesDeclineDto>> GetCurrentMonthSalesDeclineAsync(string month, string userId, CancellationToken cancellationToken = default)
         {
             try
             {
                 using var connection = _connectionFactory.CreateConnection();
 
                 var parameters = new DynamicParameters();
+                parameters.Add("@Months", month, DbType.String);
                 parameters.Add("@UserId", userId, DbType.String);
 
                 var result = await connection.QueryAsync<OpticalStoreSalesDeclineDto>(
                     "GetCurrentMonthSalesDecline",
                     parameters,
-                    commandType: CommandType.StoredProcedure
+                    commandType: CommandType.StoredProcedure,
+                    commandTimeout: 0
                 );
 
                 return result.ToList();
@@ -89,7 +94,7 @@ namespace WebApi.Services.Dashboard
             }
         }
 
-        public async Task<List<ItemGroupSalesDto>> GetItemGroupSalesAsync(string userId, CancellationToken cancellationToken = default)
+        public async Task<List<ItemGroupSalesDto>> GetItemGroupSalesAsync(string month, string userId, CancellationToken cancellationToken = default)
         {
 
             try
@@ -97,6 +102,7 @@ namespace WebApi.Services.Dashboard
                 using var connection = _connectionFactory.CreateConnection();
 
                 var parameters = new DynamicParameters();
+                parameters.Add("@Months", month, DbType.String);
                 parameters.Add("@UserId", userId, DbType.String);
 
                 var result = await connection.QueryAsync<ItemGroupSalesDto>(
